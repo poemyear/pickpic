@@ -4,6 +4,7 @@ import { AppLoading } from "expo";
 import * as Font from 'expo-font';
 import { Provider } from "@ant-design/react-native";
 import Home from "./src/Screens/Home";
+import { string } from 'prop-types';
 
 interface Props {
 
@@ -43,9 +44,11 @@ export default class App extends React.Component<Props, States> {
           title: 'Acrocorinth, Greece',
           subtitle: 'Lorem ipsum dolor sit amet et nuncat mergitur',
           illustration: 'https://i.imgur.com/KZsmUi2l.jpg'
-        }] 
+        }]
+        
+        
     }
-  }
+  } 
 
   changeTheme = (theme, currentTheme) => {
     this.setState({ theme, currentTheme });
