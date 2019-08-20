@@ -10,6 +10,7 @@
   "dependencies": {
     "@ant-design/react-native": "^3.1.13",
     "expo": "^34.0.1",
+    "expo-image-picker": "^6.0.0",
     "react": "16.8.3",
     "react-dom": "^16.8.6",
     "react-native": "https://github.com/expo/react-native/archive/sdk-34.0.0.tar.gz",
