@@ -1,0 +1,14 @@
+{
+  "name": "pickpicApp",
+  "version": "1.0.0",
+  "description": "- yarn add @ant-design/react-native<br> - yarn add react-native-snap-carousel<br> - yarn add react-native<br> ## Expo Packages - expo install permission<br>",
+  "main": "babel.config.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
