@@ -16,16 +16,19 @@ interface State {
 export default class Upload extends React.Component<ProcessingInstruction, State>{
   state:State = { image : null };
 
-  sendImage(){
+  sendImage = async () => {
     let { image } = this.state; 
     const formdata = new FormData();
-
-    var uploadImage = new File(image.uri, image.name);
+    var reader = new FileReader();
+    
+    const blobImage = await fetch(image.uri); 
+    const blobImage2 = await blobImage.blob();
+    var uploadImage = new File([blobImage2], 'temp.img');
 
     formdata.append( "userfile", uploadImage );
     formdata.append("owner", "bakyuns");
 
-    fetch('http://172.20.10.9:3000/events/', {
+    fetch('http://172.0.0.1:3000/events/', {
         method: 'post',
         headers: {
             'Content-Type': 'multipart/form-data',
