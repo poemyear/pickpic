@@ -10,7 +10,7 @@ interface Props {
 }
 
 interface State {
-  image: any; 
+  imageInfos: { image:any, index:number }[];
 }
 
 interface ImageFile extends Blob {
@@ -20,21 +20,29 @@ interface ImageFile extends Blob {
   size:null;
   slice:null;
 }
-export default class Upload extends React.Component<ProcessingInstruction, State>{
-  state:State = { image : null };
+export default class Upload extends React.Component<Props, State>{
+  state:State = { imageInfos: [] }; 
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      imageInfos: []
+    }    
+  }
 
   sendImage = async () => {
-    let { image } = this.state; 
+    let { imageInfos: images } = this.state; 
     const formdata = new FormData();
     var reader = new FileReader();
-    
-    // const blobImage = await fetch(image.uri); 
-    // const blobImage2 = await blobImage.blob();
-    // var uploadImage = new File([blobImage2], 'temp.jpg', {type:'image/jpeg'});
-    var filename = image.uri.substring(image.uri.lastIndexOf('/')+1);
-    var uploadx:ImageFile = {uri:image.uri, name:filename, type:'image/jpeg', size:null, slice:null} ;
-    // console.debug(blobImage2);
-    formdata.append( "userfile", uploadx);
+  
+    for (let imageInfo of images) {
+      var filename = imageInfo.image.uri.substring(imageInfo.image.uri.lastIndexOf('/')+1);
+      var uploadx:ImageFile = {uri:imageInfo.image.uri, name:filename, type:'image/jpeg', size:null, slice:null} ;
+      // console.debug(blobImage2);
+      formdata.append( "userfile", uploadx);
+    }
+
     formdata.append("owner", "bakyuns");
     console.debug(formdata);
     fetch('http://127.0.0.1:3000/events/', {
@@ -51,7 +59,7 @@ export default class Upload extends React.Component<ProcessingInstruction, State
   }
 
   render() {
-    let { image } = this.state;
+    let { imageInfos: imageInfos } = this.state;
 
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -59,10 +67,12 @@ export default class Upload extends React.Component<ProcessingInstruction, State
           title="Pick an image from camera roll"
           onPress={this._pickImage}
         />
-        {image &&
-           <Image source={{ uri: image.uri }} style={{ width: 200, height: 200 }} />
+        {
+          imageInfos &&
+          //  this.renderImages(images)
+          this.state.imageInfos.map(imageInfo => (<Image key={imageInfo.index} source={{ uri: imageInfo.image.uri }} style={{ width: 200, height: 200 }} />))
         }
-        {image &&
+        {imageInfos &&
           <Button title="Send to Node.js" onPress={()=>this.sendImage()}/> }
       </View>
     );
@@ -91,7 +101,9 @@ export default class Upload extends React.Component<ProcessingInstruction, State
     console.log(result);
 
     if (!result.cancelled) {
-      this.setState({ image: result });
+      const length = this.state.imageInfos.length;
+      const images = this.state.imageInfos.concat({image:result, index:length});
+      this.setState({ imageInfos: images });
     }
   };
   
