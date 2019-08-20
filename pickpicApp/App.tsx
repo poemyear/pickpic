@@ -3,9 +3,9 @@ import { Image, StyleSheet, Text, View } from 'react-native';
 import { AppLoading } from "expo";
 import * as Font from 'expo-font';
 import { Provider } from "@ant-design/react-native";
-import Home from "./src/Screens/Home";
+import Home from "./src/Scene/Home";
 import { string } from 'prop-types';
-import Upload from "./src/Screens/Upload";
+import Upload from "./src/Scene/Upload";
 
 interface Props {
 
