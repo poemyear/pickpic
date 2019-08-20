@@ -13,6 +13,13 @@ interface State {
   image: any; 
 }
 
+interface ImageFile extends Blob {
+  name:string;
+  type:string;
+  uri:string;
+  size:null;
+  slice:null;
+}
 export default class Upload extends React.Component<ProcessingInstruction, State>{
   state:State = { image : null };
 
@@ -21,14 +28,16 @@ export default class Upload extends React.Component<ProcessingInstruction, State
     const formdata = new FormData();
     var reader = new FileReader();
     
-    const blobImage = await fetch(image.uri); 
-    const blobImage2 = await blobImage.blob();
-    var uploadImage = new File([blobImage2], 'temp.img');
-
-    formdata.append( "userfile", uploadImage );
+    // const blobImage = await fetch(image.uri); 
+    // const blobImage2 = await blobImage.blob();
+    // var uploadImage = new File([blobImage2], 'temp.jpg', {type:'image/jpeg'});
+    var filename = image.uri.substring(image.uri.lastIndexOf('/')+1);
+    var uploadx:ImageFile = {uri:image.uri, name:filename, type:'image/jpeg', size:null, slice:null} ;
+    // console.debug(blobImage2);
+    formdata.append( "userfile", uploadx);
     formdata.append("owner", "bakyuns");
-
-    fetch('http://172.0.0.1:3000/events/', {
+    console.debug(formdata);
+    fetch('http://127.0.0.1:3000/events/', {
         method: 'post',
         headers: {
             'Content-Type': 'multipart/form-data',
@@ -54,7 +63,7 @@ export default class Upload extends React.Component<ProcessingInstruction, State
            <Image source={{ uri: image.uri }} style={{ width: 200, height: 200 }} />
         }
         {image &&
-          <Button title="Send to Node.js" onPress={()=>this.sendImage}/> }
+          <Button title="Send to Node.js" onPress={()=>this.sendImage()}/> }
       </View>
     );
 
