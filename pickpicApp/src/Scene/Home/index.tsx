@@ -8,20 +8,60 @@ interface Props {
     data: {title:string, subtitle:string, illustration:string}[]
 }
 interface State {
-    uri:String[]
+    uri:String[];
+    filePath:String[];
 }
 export default class MyCarousel extends React.Component<Props, State>{
 
     constructor(props: Props)
     {
         super(props);
+        this.state = {
+            uri : [],
+            filePath : []
+        }
     }
 
+    // before render(), setting part 
+    componentWillMount() {
+            console.log("componentDidMount Entrance");  
+            //fetch("https://facebook.github.io/react-native/movies.json")  // for test
+            fetch("http:localhost:3000/events")
+            .then(response => {
+              //console.log(response);
+              return response.json();
+            })
+            .then(responseJson => {
+              var PlusUri = "http://localhost:3000/";
+              //var length = responseJson.movies.length;    // for test
+              var length = responseJson.photos.length;
+              var pathArray = new Array();  // variable for saving photos-Path
+
+              for(var i = 0 ; i < length ; i++)
+              {
+                  //pathArray[i] = "https://i.imgur.com/UYiroysl.jpg";  // for test
+                  pathArray[i] = PlusUri + responseJson.photos[i].path;
+                  console.log("PathArray["+i+"] = "+pathArray[i]);
+              }
+              this.setState({
+                filePath : pathArray
+              }, ()=>{
+                  console.log("SetState Callback  "+ this.state.filePath);
+              });
+            })
+            .then
+            ()
+            .catch(error =>{
+                console.error(error);
+            })
+        }
+
     _renderItem ({item, index}, parallaxProps) {
+        console.log("_renderItem Start")
         return (
             <View style={styles.item}>
             <ParallaxImage
-                source={{ uri: item.illustration }}
+                source={{ uri: this.state.filePath[index]}}
                 containerStyle={styles.imageContainer}
                 style={styles.image}
                 parallaxFactor={0.4}
@@ -39,8 +79,8 @@ export default class MyCarousel extends React.Component<Props, State>{
                 sliderWidth={screenWidth}
                 sliderHeight={screenWidth}
                 itemWidth={screenWidth - 60}
-                data={this.props.data}
-                renderItem={this._renderItem}
+                data={this.state.filePath}
+                renderItem={this._renderItem.bind(this)}
                 hasParallaxImages={true}
             />
         );
