@@ -3,29 +3,24 @@ import { Button, Image, View, Text } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Permissions from 'expo-permissions';
 import Constants from 'expo-constants';
+import { any } from 'prop-types';
 
-export default class Upload extends React.Component {
-  state = {
-    image: null,
-  };
-  
-  
+interface Props {
 
-  sendImage() {
+}
+
+interface State {
+  image: any; 
+}
+
+export default class Upload extends React.Component<ProcessingInstruction, State>{
+  state:State = { image : null };
+
+  sendImage(){
     let { image } = this.state; 
     const formdata = new FormData();
 
-    console.log("sendImage: ", image.path, image.type, image.name, image.uri );
-
-    interface TImage{ 
-      uri:string,
-      name:string,
-      type:string 
-    }
-    var uploadImage:TImage = {
-      uri: image.uri, 
-      name: 'my_photo.jpg',
-      type: 'image/jpg'};
+    var uploadImage = new File(image.uri, image.name);
 
     formdata.append( "userfile", uploadImage );
     formdata.append("owner", "bakyuns");
@@ -56,7 +51,7 @@ export default class Upload extends React.Component {
            <Image source={{ uri: image.uri }} style={{ width: 200, height: 200 }} />
         }
         {image &&
-          <Button title="Send to Node.js" onPress={()=>this.sendImage()}/> }
+          <Button title="Send to Node.js" onPress={()=>this.sendImage}/> }
       </View>
     );
 
