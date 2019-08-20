@@ -4,6 +4,7 @@ import { AppLoading } from "expo";
 import * as Font from 'expo-font';
 import { Provider } from "@ant-design/react-native";
 import Home from "./src/Screens/Home";
+import Upload from "./src/Screens/Upload";
 
 interface Props {
 
@@ -72,7 +73,12 @@ export default class App extends React.Component<Props, States> {
     if (!isReady) {
       return <AppLoading />;
     }
-    return (
+    return ( 
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <Upload />
+        </View> 
+    );
+    {/*    return (
         <Provider theme={theme}>
           <Image
             style={{width: 50, height: 50}}
@@ -80,6 +86,6 @@ export default class App extends React.Component<Props, States> {
           />
           <Home data={this.state.data}/>
         </Provider>
-    );
+    );*/}
   }
 }
