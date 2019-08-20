@@ -11,6 +11,4 @@ npm-debug.*
 *.orig.*
 web-build/
 web-report/
-yarn.lock
-*lock*
 *.swp
