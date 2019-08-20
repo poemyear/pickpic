@@ -1,5 +1,7 @@
 node_modules/**/*
 .expo/*
+.expo-shared/*
+ios/*
 npm-debug.*
 *.jks
 *.p8
@@ -9,3 +11,6 @@ npm-debug.*
 *.orig.*
 web-build/
 web-report/
+yarn.lock
+*lock*
+*.swp
