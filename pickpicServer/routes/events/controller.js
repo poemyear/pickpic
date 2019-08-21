@@ -42,7 +42,7 @@ exports.create = (req, res) => {
             console.error(req.headers);
             console.error(req.body);
             console.log("result:" + result);;
-            res.status(200).json(req.files);
+            res.status(200).json(result);
         }).catch((err) => {console
         .error(err); res.status(400); });
 };
