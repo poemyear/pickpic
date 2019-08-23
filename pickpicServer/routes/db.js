@@ -1,15 +1,41 @@
 var mongoose = require('mongoose');
+var moment = require('moment');
+var Agenda = require('agenda');
+
+var expirePhotoHandler = new Agenda({db: { address: 'mongodb://localhost:27017/expirePhoto'}});
+
+expirePhotoHandler.define('changeStatus', async function(job, done){
+    console.log('changeStatus');
+    events = await Event.find({status: 'voting', expireAt:{$lt:Date.now()}});
+    for(let event of events){
+        event.status="expired";
+        event.save(function(err){
+            if( err ){
+
+            }
+        });
+    }
+    console.log(result);
+    done();
+});
+expirePhotoHandler.on('ready', function() {
+    expirePhotoHandler.every('3 seconds', 'changeStatus');
+    expirePhotoHandler.start();
+});
 
 /* DB Schema */
-var Event = mongoose.model('Event', mongoose.Schema({
+const EventSchema = new mongoose.Schema({
     owner : 'string',
     createdAt: Date,
+    expireAt: Date,
+    status: 'string',
     photos : [mongoose.Schema({
         path : 'string',
         filename : 'string'
     })]
-}));
+});
 
+var Event = mongoose.model('Event', EventSchema);
 var User = mongoose.model('User', mongoose.Schema({
     name: 'string'
 }));
@@ -39,8 +65,11 @@ exports.createEvent = (owner, photos) => {
     var newEvent = new Event({
         owner: owner,
         createdAt: Date.now(),
+        expireAt: moment().add(3600*24*2, 'second'),
+        status: 'voting',
         photos: photos
     });
+
     return new Promise((resolve, reject) => {
         newEvent.save(function(error, data){
             if(error){
@@ -55,13 +84,11 @@ exports.createEvent = (owner, photos) => {
     });
 }
 
-
 exports.fetchEvents = (req) => {
     console.log("db.js - fetchEvents");
 
     return Event.find();
 }
-
 
 exports.readEvent = (id) =>{
     console.debug("db.js - readEvent");
