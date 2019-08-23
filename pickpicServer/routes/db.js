@@ -87,7 +87,7 @@ exports.createEvent = (owner, photos) => {
 exports.fetchEvents = (req) => {
     console.log("db.js - fetchEvents");
 
-    return Event.find();
+    return Event.find({ "photos.0": { "$exists": true }}).sort({'createdAt': -1}).limit(10);;
 }
 
 exports.readEvent = (id) =>{
