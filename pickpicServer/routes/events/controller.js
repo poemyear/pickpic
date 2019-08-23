@@ -32,10 +32,10 @@ exports.create = (req, res) => {
         return res.status(400).json({error: 'Invalid id'});
     }
 
-    // if (req.files.length < 2) {
-    //     console.error("photo uploaded less than 2");
-    //     return res.status(400).json({error: 'Upload at least 2 photos'})
-    // }
+    if (req.files.length < 2) {
+        console.error("photo uploaded less than 2");
+        return res.status(400).json({error: 'Upload at least 2 photos'})
+    }
 
     db.createEvent(owner, req.files)
         .then((result) => {
