@@ -1,76 +1,101 @@
 import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
-import { Dimensions, StyleSheet, View, Text, Platform } from 'react-native';
-import React from "react";
+import { Button, Dimensions, StyleSheet, View, Text, Platform } from 'react-native';
+import React, { useRef, createRef } from 'react'
 import SliderEntry from "../../Component/SliderEntry.js";
+import Upload from "../Upload";
 
 const { width: screenWidth } = Dimensions.get('window')
 interface Props {
     // data: {title:string, subtitle:string, illustration:string}[]
 }
 interface State {
-    event: {
-        id: String;
-        uri: String[];
-        filePath: String[];
-    }
+    eventIdx: number,
+    events: {
+        id: String,
+        photos: {
+            id: String,
+            uri: String
+        }[];
+    }[];
 }
+
+
 export default class MyCarousel extends React.Component<Props, State>{
+    carouselRef = createRef<Carousel>();
     serverAddress = "http://localhost:3000";
     eventRoute = this.serverAddress + "/events";
 
     constructor(props: Props) {
         super(props);
         this.state = {
-            event: {
-                id: null,
-                uri: [],
-                filePath: []
-            }
+            eventIdx: 0,
+            events: []
         }
     }
 
+    snapToNext = () => {
+        this.carouselRef.current.snapToNext();
+    }
+
+    snapToPrev = () => {
+        this.carouselRef.current.snapToPrev();
+    }
+
+    vote = async () => {
+        const activeIdx = this.carouselRef.current._getActiveItem();
+        const event = this.state.events[this.state.eventIdx];
+
+        const eventId = event.id;
+        const photoId = event.photos[activeIdx].id;
+
+        const voteInfo = this.eventRoute + "/" + eventId + "/" + photoId;
+
+        var response = await fetch(voteInfo, {
+            method: 'post',
+            body: JSON.stringify({
+                'voter': 'bakyuns'
+            })
+        });
+
+        console.log(response.status, ": vote for eventId: ", eventId, ", photoId: ", photoId);
+        this.setState({ eventIdx: this.state.eventIdx + 1 });
+    }
+
+
     fetchEvent = async () => {
-        var responseJson = await (await fetch(this.eventRoute)).json();
-        for (let event of responseJson) {
-            // console.debug(responseJson);
+        let responseJson = await (await fetch(this.eventRoute)).json();
+        let events = [];
+        for (let event of await responseJson) {
+            events.push(await this.plotEvent(event._id));
         }
-        return responseJson;
+        return events;
     }
 
     plotEvent = async (eventId) => {
-        var eventInfo = this.eventRoute + "/" + eventId;
-        var responseJson = await (await fetch(eventInfo)).json();
-        
-        var photos = responseJson.photos;
-        var pathArray = new Array<string>();  // variable for saving photos-Path
+        let eventInfo = this.eventRoute + "/" + eventId;
+        let responseJson = await (await fetch(eventInfo)).json();
+        console.debug(eventId);
 
-        for (var i=0; i < photos.length; i++) {
-            pathArray[i] = this.serverAddress + "/" + responseJson.photos[i].path;
-            console.log("PathArray[" + i + "] = " + pathArray[i]);
+        let photos = [];
+        for (let i = 0; i < responseJson.photos.length; i++) {
+            const info = responseJson.photos[i];
+            const photoId = info._id;
+            const uri = this.serverAddress + "/" + info.path;
+            photos.push({ id: photoId, uri });
         }
-
-        this.setState({
-            event: {
-                id: eventId,
-                filePath: pathArray,
-                uri: []
-            }
-        }, () => {
-            console.log("SetState Callback  " + this.state.event.filePath);
-        });
+        return { id: eventId, photos };
     }
 
     // before render(), setting part 
     async componentWillMount() {
         console.log("componentDidMount Entrance");
         try {
-            // var responseJson = ;
-            for (let event of await this.fetchEvent()) {
-                // console.debug(responseJson);
-                const eventId = "5d5d6ea02b16eb5df033a363";
-                this.plotEvent(eventId); // TODO: 받아온 event들 사진 다운로드해오기 
-                break;
-            }
+            let events = await this.fetchEvent();
+            this.setState({
+                events
+            });
+
+            console.log(this.state);
         } catch (err) {
             console.error(err);
         }
@@ -78,10 +103,11 @@ export default class MyCarousel extends React.Component<Props, State>{
 
     _renderItem = ({ item, index }, parallaxProps) => {
         console.log("_renderItem Start")
+        console.log(item);
         return (
             <View style={styles.item}>
                 <ParallaxImage
-                    source={{ uri: this.state.event.filePath[index] }}
+                    source={{ uri: item.uri }}
                     containerStyle={styles.imageContainer}
                     style={styles.image}
                     parallaxFactor={0.4}
@@ -94,15 +120,30 @@ export default class MyCarousel extends React.Component<Props, State>{
     }
 
     render() {
+        var data = [];
+        if (this.state.events[this.state.eventIdx])
+            data = this.state.events[this.state.eventIdx].photos;
         return (
-            <Carousel
-                sliderWidth={screenWidth}
-                sliderHeight={screenWidth}
-                itemWidth={screenWidth - 60}
-                data={this.state.event.filePath}
-                renderItem={this._renderItem}
-                hasParallaxImages={true}
-            />
+            <View>
+                <Carousel
+                    ref={this.carouselRef}
+                    sliderWidth={screenWidth}
+                    sliderHeight={screenWidth}
+                    itemWidth={screenWidth - 60}
+                    data={data} //{this.state.events[this.state.eventIdx].photos}
+                    renderItem={this._renderItem}
+                    hasParallaxImages={true}
+                />
+                <Button
+                    title={'Pick'}
+                    onPress={this.vote} />
+                <Button
+                    title={'Next'}
+                    onPress={this.snapToNext} />
+                <Button
+                    title={'Prev'}
+                    onPress={this.snapToPrev} />
+            </View>
         );
     }
 }
