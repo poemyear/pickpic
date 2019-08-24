@@ -6,6 +6,7 @@ import { Provider } from "@ant-design/react-native";
 import Home from "./src/Scene/Home";
 import { string } from 'prop-types';
 import Upload from "./src/Scene/Upload";
+import CheckResult from "./src/Scene/CheckResult"
 
 interface Props {
 
@@ -78,7 +79,7 @@ export default class App extends React.Component<Props, States> {
     }
     return ( 
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Upload />
+          <CheckResult />
         </View> 
     );
     {/*    return (
