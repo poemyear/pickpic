@@ -2,9 +2,15 @@ const db = require('../db');
 
 // db.connect();
 
-exports.index = async (req, res) => {
+exports.index = (req, res) => {
     console.log("controller.js - index");
-    return res.send(await db.fetchEvents(req));
+    return db.fetchEvents(req.body.id)
+        .then((result)=> {
+            res.send(result);
+        }).catch((err) => {
+            console.error(err);
+           res.status(400).json({error: 'Invalid id'});
+        });
     // return res.send*
 
     // return db.fetchEvents(req).then((result)=>{res.send(result)});
@@ -34,7 +40,7 @@ exports.create = (req, res) => {
 
     if (req.files.length < 2) {
         console.error("photo uploaded less than 2");
-        return res.status(400).json({error: 'Upload at least 2 photos'})
+        return res.status(401).json({error: 'Upload at least 2 photos'})
     }
 
     db.createEvent(owner, req.files)

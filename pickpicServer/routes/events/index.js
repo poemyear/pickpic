@@ -18,7 +18,7 @@ let storage = multer.diskStorage({
 })
 let upload = multer({
     /* upload한 파일을 그대로 수정 없이 upload/ 에 저장 */
-    // dest: "upload/"
+    //dest: "upload/"
     /* diskStroage 사용 */
     storage:storage
 })

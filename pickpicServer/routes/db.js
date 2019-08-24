@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var moment = require('moment');
 var Agenda = require('agenda');
+var ObjectId = require('mongoose').Types.ObjectId;
 
 var expirePhotoHandler = new Agenda({db: { address: 'mongodb://localhost:27017/expirePhoto'}});
 
@@ -15,7 +16,6 @@ expirePhotoHandler.define('changeStatus', async function(job, done){
             }
         });
     }
-    console.log(result);
     done();
 });
 expirePhotoHandler.on('ready', function() {
@@ -37,7 +37,9 @@ const EventSchema = new mongoose.Schema({
 
 var Event = mongoose.model('Event', EventSchema);
 var User = mongoose.model('User', mongoose.Schema({
-    name: 'string'
+    id: 'string',
+    votes: [],
+    events : [],
 }));
 
 var Vote = mongoose.model('Vote', mongoose.Schema({
@@ -62,6 +64,8 @@ exports.connect = () => {
 
 exports.createEvent = (owner, photos) => {
     console.log("db.js - createEvent");
+    let user = findUser(owner);
+
     var newEvent = new Event({
         owner: owner,
         createdAt: Date.now(),
@@ -76,18 +80,24 @@ exports.createEvent = (owner, photos) => {
                 console.error(error);
                 reject(error);
             }else{
-                console.log('Saved!')
-                console.info(data);
+                user.events.push( data._id );
+                user.save();
+
                 resolve(data);
             }
         })
     });
 }
 
-exports.fetchEvents = (req) => {
+exports.fetchEvents = async (id) => {
     console.log("db.js - fetchEvents");
 
-    return Event.find({ "photos.0": { "$exists": true }}).sort({'createdAt': -1}).limit(10);;
+    let user = await User.findOne({id});
+
+    if ( user == undefined )
+        return Promise.error( new UserNotFoundException() );
+
+    return Event.find({"_id":{$nin:user.votes.map((obj)=>obj.eventId)}, "photos.0": { "$exists": true }, "status":"voting"} ).sort({'createdAt': -1}).limit(10);
 }
 
 exports.readEvent = (id) =>{
@@ -97,7 +107,6 @@ exports.readEvent = (id) =>{
         Event.findOne({ _id: id }, (err, event) => {
             console.log('--- Read one ---');
             if (err) {
-                console.error(err);
                 reject(err);
             } else {
                 console.info(event);
@@ -131,47 +140,54 @@ exports.aggregateVotes = (eventId) =>{
 
 /* Vote */
 
-exports.createVote = (voter, eventId, photoId) => {
-    console.log("db.js - createEvent");
-    var newVote = new Vote({voter, eventId, photoId, votedAt:Date.now()});
+exports.createVote = async (voter, eventId, photoId) => {
+    console.log("db.js - createVote");
+    let userPromise = User.findOne({id:voter});
+    let eventPromise = Event.findOne({_id:ObjectId(eventId)});
+    const check = await Promise.all([userPromise, eventPromise]);
 
-    /* TODO: Validate voter, eventId, photoId */
-    return new Promise((resolve, reject) => {
-        newVote.save(function(error, data){
-            if(error){
-                console.error(error);
-                reject(error);
-            }else{
-                console.info(data);
+    if ( check[0] == null )
+        return Promise.error( new UserNotFoundException() );
+
+    if ( check[1] == null || check[1].status != 'voting' )
+        return Promise.error( new EventExpiredException() );
+
+    const newVote = new Vote({voter, eventId, photoId, votedAt:Date.now()});
+    const user = check[0];
+
+    return new Promise (( resolve, reject ) => {
+        newVote.save( (error, data) => {
+            if( error ) {
+                reject( new VoteInternalException() );
+            }
+            else {
+                user.votes.push({voteId:data._id, eventId});
+                user.save();
+
                 resolve(data);
             }
-        })
+        });
     });
 }
-
-
-
-
 
 /* Users */
 
 exports.fetchUsers = () => {
     console.debug("db.js - fetchUsers");
+
     return User.find();
 }
 
-exports.createUser = (name) => {
+exports.createUser = (id) => {
     console.debug("db.js - createUser");
-    return new Promise((resolve, reject) => {
-        new User({name}).save((error, data) => {
-            if(error){
-                console.error(error);
-                reject(error);
-            }else{
-                console.debug(data);
-                resolve(data);
+
+    return new Promise( (resolve, reject) => {
+        User.create({id:id}, (error, data)=> {
+            if (error) {
+                reject( new UserAlreadyException() );
             }
-        })
+            resolve(data);
+        } );
     });
 }
 
@@ -185,11 +201,7 @@ exports.deleteUser = async (id) => {
     });
 }
 
-
-
-
 /* TODO: */
-
 
 exports.deleteEvent = async (id) => {
     console.log("db.js - deleteEvent");

@@ -2,9 +2,15 @@ const db = require('../db');
 
 // /db.connect();
 
-exports.index = async (req, res) => {
+exports.index = (req, res) => {
     console.log("controller.js - index");
-    return res.send(await db.fetchUsers(req));
+    return db.fetchUsers(req)
+        .then((result)=>{
+            res.send(result);
+        }).catch((err) => {
+            console.log(err);
+            res.status(400).json({error: 'Invalid id'});
+        });
 };
 
 exports.show = (req, res) => {
@@ -24,7 +30,7 @@ exports.show = (req, res) => {
 
 exports.create = (req, res) => {
     console.log("controller.js - create");
-    db.createUser(req.body.name)
+    db.createUser(req.body.id)
         .then((result) => {
             console.log("result:" + result);
             res.status(200).send(result);
