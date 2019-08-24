@@ -5,10 +5,9 @@ import * as Permissions from 'expo-permissions';
 import Constants from 'expo-constants';
 import { any } from 'prop-types';
 
+
 interface Props {
-
-}
-
+};
 interface State {
   imageInfos: { image: any, index: number }[];
 }

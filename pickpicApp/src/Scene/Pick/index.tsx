@@ -2,11 +2,12 @@ import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
 import { Button, Dimensions, StyleSheet, View, Text, Platform } from 'react-native';
 import React, { useRef, createRef } from 'react'
 import SliderEntry from "../../Component/SliderEntry.js";
-import Upload from "../Upload";
+
 
 const { width: screenWidth } = Dimensions.get('window')
+
 interface Props {
-    // data: {title:string, subtitle:string, illustration:string}[]
+
 }
 interface State {
     eventIdx: number,
@@ -20,7 +21,7 @@ interface State {
 }
 
 
-export default class MyCarousel extends React.Component<Props, State>{
+export default class Pick extends React.Component<Props, State>{
     carouselRef = createRef<Carousel>();
     serverAddress = "http://localhost:3000";
     eventRoute = this.serverAddress + "/events";
@@ -31,6 +32,7 @@ export default class MyCarousel extends React.Component<Props, State>{
             eventIdx: 0,
             events: []
         }
+        console.debug('Pick constructor');
     }
 
     snapToNext = () => {
@@ -88,7 +90,7 @@ export default class MyCarousel extends React.Component<Props, State>{
 
     // before render(), setting part 
     async componentWillMount() {
-        console.log("componentDidMount Entrance");
+        console.log("componentWillMount Entrance");
         try {
             let events = await this.fetchEvent();
             this.setState({
