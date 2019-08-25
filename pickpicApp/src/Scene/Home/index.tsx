@@ -88,7 +88,7 @@ export default class MyCarousel extends React.Component<Props, State>{
 
     // before render(), setting part 
     async componentWillMount() {
-        console.log("componentDidMount Entrance");
+        console.log("componentWillMount Entrance");
         try {
             let events = await this.fetchEvent();
             this.setState({

@@ -6,15 +6,16 @@ import Upload from "../Upload";
 
 const { width: screenWidth } = Dimensions.get('window')
 interface Props {
-    // data: {title:string, subtitle:string, illustration:string}[]
+
 }
 interface State {
-    eventIdx: number,
-    events: {
-        photo_ID: String,
-        filePath: String,
-        count: number
+    event_Id: number,
+    status: {
+        photo_Id:String,
+        filePath:String,
+        count:number
     }[];
+    loading : string
 }
 
 
@@ -25,68 +26,63 @@ export default class CheckResult extends React.Component<Props, State>{
     constructor(props: Props) {
         super(props);
         this.state = {
-            eventIdx: 0,
-            events: []
+            event_Id: 0,
+            status: [],
+            loading : "init"
         }
     }
 
     fetchEvent = async () => {
         let responseJson = await (await fetch(this.eventRoute)).json();
-        let events = [];
-        events.push(await this.plotEvent(responseJson[0]._id));
-
-        console.log("events :::::::::: " +events );
-        return events;
+        let event = await this.plotEvent(responseJson[0]._id);
+        return event;
     }
 
     plotEvent = async (eventId) => {
         let eventInfo = this.eventRoute + "/" + eventId + "/status";
         let responseJson = await (await fetch(eventInfo)).json();
-        console.debug(eventId);
 
         let resultInfo = [];
-        
-        console.log(responseJson);
-        console.log(" for state before : " + responseJson.status.length);
         for (let i = 0; i < responseJson.status.length; i++) {
             const photoId = responseJson.status[i]._id;
             const path = responseJson.status[i].path;
-            const count = responseJson.status[i].count;
+            const cnt = responseJson.status[i].count;
             
-            resultInfo.push({ id: photoId, path, count });
-
-            console.log(" hohohohoho " + resultInfo);
+            resultInfo.push( { photo_Id : photoId, filePath : path, count : cnt });
         }
-        return { id: eventId, resultInfo };
+        let resultObj = {event_Id : eventId , status: resultInfo, loading : "finish"};
+        return resultObj;
     }
 
-    // before render(), setting part 
-    async componentWillMount() {
-        console.log("componentWillMount Entrance");
+    async componentDidMount() {
+        console.log("componentDidMount Entrance");
         try {
-            let events = await this.fetchEvent();
-            this.setState({
-                events
-            });
-
+            let event = await this.fetchEvent();
+            this.setState(
+                event
+            );
             console.log(this.state);
         } catch (err) {
             console.error(err);
         }
+        console.log("componentDidMount Exit");
     }
 
     render() {
-        //let { imageInfos: imageInfos } = this.state;
-    
-        return (
-          //<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>   
-          <Text style={{fontSize: 20}}>{this.state.events[0].filePath}</Text>
-            //this.state.events[0].photo_ID
-            //this.state.events[0].filePath
-            //this.state.events[0].count
-          //</View>
-        );
-    
+        if(this.state.loading === 'init'){
+            console.log("Setstate Not Finished")
+            return <Text style={{fontSize: 20}}> Checking...</Text>
+        }
+
+        if(this.state.loading === 'finish'){
+            console.log("Setstate Finished");
+            return (
+                //일단 첫번째만 출력하도록 , 값이 들어와서 표출되는지만 확인
+                //어떤 화면으로 어떻게 표출할지는 논의 필요
+                <Text style={{fontSize: 20}}>event ID : {this.state.event_Id }{"\n"}photo ID : {this.state.status[0].photo_Id}{"\n"} 
+                file path : {this.state.status[0].filePath}{"\n"}count : {this.state.status[0].count}{"\n"}</Text>
+              );
+            }
       }
 }
 
