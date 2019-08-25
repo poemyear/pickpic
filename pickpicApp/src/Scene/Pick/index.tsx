@@ -61,6 +61,8 @@ export default class Pick extends React.Component<Props, State>{
 
         console.log(response.status, ": vote for eventId: ", eventId, ", photoId: ", photoId);
         this.setState({ eventIdx: this.state.eventIdx + 1 });
+    
+        this.carouselRef.current.snapToItem(0);
     }
 
 
