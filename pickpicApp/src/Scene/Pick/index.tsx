@@ -1,7 +1,6 @@
 import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
 import { Button, Dimensions, StyleSheet, View, Text, Platform } from 'react-native';
 import React, { useRef, createRef } from 'react'
-import SliderEntry from "../../Component/SliderEntry.js";
 
 
 const { width: screenWidth } = Dimensions.get('window')
@@ -29,7 +28,7 @@ export default class Pick extends React.Component<Props, State>{
     constructor(props: Props) {
         super(props);
         this.state = {
-            eventIdx: 0,
+            eventIdx: -1,
             events: []
         }
         console.debug('Pick constructor');
@@ -46,12 +45,7 @@ export default class Pick extends React.Component<Props, State>{
     vote = async () => {
         const activeIdx = this.carouselRef.current._getActiveItem();
         const event = this.state.events[this.state.eventIdx];
-
-        const eventId = event.id;
-        const photoId = event.photos[activeIdx].id;
-
-        const voteInfo = this.eventRoute + "/" + eventId + "/" + photoId;
-
+        const voteInfo = this.eventRoute + "/" + event.id + "/" + event.photos[activeIdx].id;
         var response = await fetch(voteInfo, {
             method: 'post',
             body: JSON.stringify({
@@ -59,23 +53,37 @@ export default class Pick extends React.Component<Props, State>{
             })
         });
 
-        console.log(response.status, ": vote for eventId: ", eventId, ", photoId: ", photoId);
-        this.setState({ eventIdx: this.state.eventIdx + 1 });
-    
+        console.log(response.status, ": ", voteInfo);
+
         this.carouselRef.current.snapToItem(0);
+
+        try {
+            if (this.state.eventIdx + 1 >= this.state.events.length) {
+                this.setState({
+                    eventIdx: 0,
+                    events: await this.fetchEvents()
+                });
+            } else {
+                this.setState({
+                    eventIdx: this.state.eventIdx + 1
+                })
+            }
+        } catch (err) {
+            console.error(err);
+        }
     }
 
-
-    fetchEvent = async () => {
+    fetchEvents = async () => {
+        console.debug("fetch Events");
         let responseJson = await (await fetch(this.eventRoute)).json();
         let events = [];
-        for (let event of await responseJson) {
-            events.push(await this.plotEvent(event._id));
+        for (let event of responseJson) {
+            events.push(await this.parseEvent(event._id));
         }
         return events;
     }
 
-    plotEvent = async (eventId) => {
+    parseEvent = async (eventId) => {
         let eventInfo = this.eventRoute + "/" + eventId;
         let responseJson = await (await fetch(eventInfo)).json();
         console.debug(eventId);
@@ -90,24 +98,19 @@ export default class Pick extends React.Component<Props, State>{
         return { id: eventId, photos };
     }
 
-    // before render(), setting part 
-    async componentWillMount() {
-        console.log("componentWillMount Entrance");
+    async componentDidMount() {
+        console.log("componentDidMount Entrance");
         try {
-            let events = await this.fetchEvent();
             this.setState({
-                events
+                eventIdx: 0,
+                events: await this.fetchEvents()
             });
-
-            console.log(this.state);
         } catch (err) {
             console.error(err);
         }
     }
 
     _renderItem = ({ item, index }, parallaxProps) => {
-        console.log("_renderItem Start")
-        console.log(item);
         return (
             <View style={styles.item}>
                 <ParallaxImage
@@ -125,7 +128,7 @@ export default class Pick extends React.Component<Props, State>{
 
     render() {
         var data = [];
-        if (this.state.events[this.state.eventIdx])
+        if (this.state.eventIdx >= 0)
             data = this.state.events[this.state.eventIdx].photos;
         return (
             <View>
