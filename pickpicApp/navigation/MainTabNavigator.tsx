@@ -5,6 +5,7 @@ import { createStackNavigator, createBottomTabNavigator } from 'react-navigation
 import TabBarIcon from '../components/TabBarIcon';
 import PickScreen from '../src/Scene/Pick';
 import UploadScreen from '../src/Scene/Upload';
+import ResultScreen from '../src/Scene/CheckResult';
 
 const config = Platform.select({
   web: { headerMode: 'screen' },
@@ -65,9 +66,27 @@ UserStack.navigationOptions = {
 
 // UserStack.path = '';
 
+
+const ResultStack = createStackNavigator(
+  {
+    Result: ResultScreen,
+  },
+  // config
+);
+
+ResultStack.navigationOptions = {
+  tabBarLabel: 'Result',
+  tabBarIcon: ({ focused }) => (
+    <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-options' : 'md-options'} />
+  ),
+};
+
+// UserStack.path = '';
+
 const tabNavigator = createBottomTabNavigator({
   PickStack: PickStack,
   UploadStack: UploadStack,
+  ResultStack: ResultStack,
   UserStack: UserStack,
 });
 
