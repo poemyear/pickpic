@@ -4,7 +4,7 @@ const db = require('../db');
 
 exports.index = (req, res) => {
     console.log("controller.js - index");
-    return db.fetchEvents(req.body.id)
+    return db.fetchEvents(req.query.id)
         .then((result)=> {
             res.send(result);
         }).catch((err) => {
@@ -95,12 +95,10 @@ exports.vote = (req, res) => {
             console.debug("result:" + result);
             res.status(200).send(result);
         }).catch((err) => {
-            console
-                .error(err); res.status(400);
+            console.error(err);
+            res.status(400).send(err);
         });
 };
-
-
 
 exports.update = (req, res) => {
     console.log("controller.js - updateEvent");

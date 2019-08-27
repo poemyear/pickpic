@@ -69,6 +69,7 @@ exports.createEvent = (owner, photos) => {
         createdAt: Date.now(),
         expireAt: moment().add(3600*24*2, 'second'),
         status: 'voting',
+        voters: [],
         photos: photos
     });
 
@@ -113,9 +114,9 @@ exports.aggregateVotes = (eventId) =>{
         Vote.aggregate([
             { $match: {eventId}},
             { $group:
-                { _id: "$photoId",
-                count: { $sum: 1 }
-            }
+                    { _id: "$photoId",
+                        count: { $sum: 1 }
+                    }
             }], (err, event) => {
             if (err) {
                 console.error(err);
@@ -134,17 +135,17 @@ exports.createVote = async (voter, eventId, photoId) => {
     console.log("db.js - createVote");
     let event = await Event.findOne({_id:ObjectId(eventId)});
     if ( event == undefined || event.status != 'voting' )
-        return Promise.error( new EventExpiredException() );
+        return Promise.reject( 'EventExpiredError' );
 
-    if ( event.voters.indexOf( voter ) == -1 )
-        return Promise.error( new VoteAlreadyException() );
+    if ( event.voters.indexOf( voter ) != -1 )
+        return Promise.reject( 'VoteAlreadyError' );
 
     const newVote = new Vote({voter, eventId, photoId, votedAt:Date.now()});
 
     return new Promise (( resolve, reject ) => {
         newVote.save( (error, data) => {
             if( error ) {
-                reject( new VoteInternalException() );
+                reject( 'VoteInternalError' );
             }
             else {
                 event.voters.push(voter);
@@ -170,7 +171,7 @@ exports.createUser = (id) => {
     return new Promise( (resolve, reject) => {
         User.create({id:id}, (error, data)=> {
             if (error) {
-                reject( new UserAlreadyException() );
+                reject( 'UserAlreadyError' );
             }
             resolve(data);
         } );
