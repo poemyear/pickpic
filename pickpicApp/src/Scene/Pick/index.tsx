@@ -59,9 +59,10 @@ export default class Pick extends React.Component<Props, State>{
 
         try {
             if (this.state.eventIdx + 1 >= this.state.events.length) {
+                const events = await this.fetchEvents();
                 this.setState({
-                    eventIdx: 0,
-                    events: await this.fetchEvents()
+                    eventIdx: events.length > 0 ? 0 : -1,
+                    events: events
                 });
             } else {
                 this.setState({
@@ -101,9 +102,10 @@ export default class Pick extends React.Component<Props, State>{
     async componentDidMount() {
         console.log("componentDidMount Entrance");
         try {
+            const events = await this.fetchEvents();
             this.setState({
-                eventIdx: 0,
-                events: await this.fetchEvents()
+                eventIdx: events.length > 0 ? 0 : -1,
+                events: events
             });
         } catch (err) {
             console.error(err);
