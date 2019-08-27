@@ -4,6 +4,7 @@ import { AppLoading } from "expo";
 import * as Font from 'expo-font';
 
 import AppNavigator from './navigation/AppNavigator';
+import Signin from './src/Scene/Signin';
 
 interface Props {
 
@@ -51,6 +52,6 @@ export default class App extends React.Component<Props, States> {
     if (!isReady) {
       return <AppLoading />;
     }
-    return <AppNavigator/>;
+    return <Signin/>;
   }
 }

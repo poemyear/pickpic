@@ -29,6 +29,7 @@ const EventSchema = new mongoose.Schema({
     createdAt: Date,
     expireAt: Date,
     status: 'string',
+    voters: [],
     photos : [mongoose.Schema({
         path : 'string',
         filename : 'string'
@@ -38,8 +39,6 @@ const EventSchema = new mongoose.Schema({
 var Event = mongoose.model('Event', EventSchema);
 var User = mongoose.model('User', mongoose.Schema({
     id: 'string',
-    votes: [],
-    events : [],
 }));
 
 var Vote = mongoose.model('Vote', mongoose.Schema({
@@ -64,7 +63,6 @@ exports.connect = () => {
 
 exports.createEvent = (owner, photos) => {
     console.log("db.js - createEvent");
-    let user = findUser(owner);
 
     var newEvent = new Event({
         owner: owner,
@@ -80,9 +78,6 @@ exports.createEvent = (owner, photos) => {
                 console.error(error);
                 reject(error);
             }else{
-                user.events.push( data._id );
-                user.save();
-
                 resolve(data);
             }
         })
@@ -92,12 +87,7 @@ exports.createEvent = (owner, photos) => {
 exports.fetchEvents = async (id) => {
     console.log("db.js - fetchEvents");
 
-    let user = await User.findOne({id});
-
-    if ( user == undefined )
-        return Promise.error( new UserNotFoundException() );
-
-    return Event.find({"_id":{$nin:user.votes.map((obj)=>obj.eventId)}, "photos.0": { "$exists": true }, "status":"voting"} ).sort({'createdAt': -1}).limit(10);
+    return Event.find({"owner":{$ne:id},"voters":{$ne:id}, "photos.0": { "$exists": true }, "status":"voting"} ).sort({'createdAt': -1}).limit(10);
 }
 
 exports.readEvent = (id) =>{
@@ -142,18 +132,14 @@ exports.aggregateVotes = (eventId) =>{
 
 exports.createVote = async (voter, eventId, photoId) => {
     console.log("db.js - createVote");
-    let userPromise = User.findOne({id:voter});
-    let eventPromise = Event.findOne({_id:ObjectId(eventId)});
-    const check = await Promise.all([userPromise, eventPromise]);
-
-    if ( check[0] == null )
-        return Promise.error( new UserNotFoundException() );
-
-    if ( check[1] == null || check[1].status != 'voting' )
+    let event = await Event.findOne({_id:ObjectId(eventId)});
+    if ( event == undefined || event.status != 'voting' )
         return Promise.error( new EventExpiredException() );
 
+    if ( event.voters.indexOf( voter ) == -1 )
+        return Promise.error( new VoteAlreadyException() );
+
     const newVote = new Vote({voter, eventId, photoId, votedAt:Date.now()});
-    const user = check[0];
 
     return new Promise (( resolve, reject ) => {
         newVote.save( (error, data) => {
@@ -161,8 +147,8 @@ exports.createVote = async (voter, eventId, photoId) => {
                 reject( new VoteInternalException() );
             }
             else {
-                user.votes.push({voteId:data._id, eventId});
-                user.save();
+                event.voters.push(voter);
+                event.save();
 
                 resolve(data);
             }
