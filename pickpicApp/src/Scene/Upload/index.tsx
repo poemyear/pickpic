@@ -1,9 +1,9 @@
-import { Button, Dimensions, StyleSheet, Image, View, Text, Platform, TouchableOpacity } from 'react-native';
+import { Button, Dimensions, StyleSheet, Image, View, Text, Platform, TouchableOpacity, TextInput } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Permissions from 'expo-permissions';
 import Constants from 'expo-constants';
-import Carousel, { ParallaxImage, Pagination } from 'react-native-snap-carousel';
-import React, { createRef, useRef } from 'react'
+import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
+import React, { createRef } from 'react'
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -13,7 +13,8 @@ interface State {
   imageInfos: {
     image: any,
     index: number
-  }[];
+  }[],
+  title: string
 }
 
 interface ImageFile extends Blob {
@@ -26,7 +27,7 @@ interface ImageFile extends Blob {
 
 export default class Upload extends React.Component<Props, State>{
   carouselRef = createRef<Carousel>();
-  state: State = { imageInfos: [] };
+  state: State = { imageInfos: [], title: "" };
   serverAddress = "http://localhost:3000";
   eventRoute = this.serverAddress + "/events";
   addButtonImage = { uri: this.serverAddress + "/upload/addButton.png" };
@@ -35,7 +36,8 @@ export default class Upload extends React.Component<Props, State>{
     super(props);
 
     this.state = {
-      imageInfos: [{ image: this.addButtonImage, index: 0 }]
+      imageInfos: [{ image: this.addButtonImage, index: 0 }],
+      title: "Title을 입력해주세요."
     }
   }
 
@@ -46,17 +48,23 @@ export default class Upload extends React.Component<Props, State>{
   snapToPrev = () => {
     this.carouselRef.current.snapToPrev();
   }
+
   sendImage = async () => {
     let { imageInfos: images } = this.state;
     const formdata = new FormData();
     var reader = new FileReader();
 
-    images = images.slice(1, images.length);
+    if (images.length < 3) {
+      alert("사진을 2장이상 선택해 주세요.");
+      return;
+    }
+
+
+    images = images.slice(1, images.length); // detach add button 
     for (let imageInfo of images) {
       let uri = imageInfo.image.uri;
       var filename = uri.substring(uri.lastIndexOf('/') + 1);
       var upload: ImageFile = { uri: uri, name: filename, type: 'image/jpeg', size: null, slice: null };
-      // console.debug(blobImage2);
       formdata.append("userfile", upload);
     }
 
@@ -80,7 +88,10 @@ export default class Upload extends React.Component<Props, State>{
       const id = responseJson._id;
       console.debug('responseJson', responseJson);
       console.log('image uploaded. id: ', id);
-
+      alert("Event 생성 완료: " + id);
+      this.setState({
+        imageInfos: [{ image: this.addButtonImage, index: 0 }]
+      });
     } catch (err) {
       console.error(err);
     }
@@ -88,10 +99,10 @@ export default class Upload extends React.Component<Props, State>{
 
   _renderItem = ({ item, index }, parallaxProps) => {
 
-    if (index == 0) {
+    if (index == 0) { // add button
       return (
         <View style={styles.item}>
-          <TouchableOpacity style={styles.item} onPress={this._pickImage}>
+          <TouchableOpacity style={styles.button} onPress={this._pickImage}>
             <ParallaxImage
               source={{ uri: item.image.uri }}
               containerStyle={styles.imageContainer}
@@ -122,6 +133,11 @@ export default class Upload extends React.Component<Props, State>{
 
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <TextInput
+          style={{ height: 40, width:screenWidth-60 }}
+          onChangeText={(title) => this.setState({ title })}
+          value={this.state.title}
+        />
         <Carousel
           ref={this.carouselRef}
           layout={'stack'}
@@ -134,7 +150,7 @@ export default class Upload extends React.Component<Props, State>{
         />
         <Button
           title={'Next'}
-          onPress={this.goForward} />
+          onPress={this.snapToNext} />
         <Button
           title={'Prev'}
           onPress={this.snapToPrev} />
@@ -146,7 +162,7 @@ export default class Upload extends React.Component<Props, State>{
             <Image key={imageInfo.index} source={{ uri: imageInfo.image.uri }} style={{ width: 200, height: 200 }} />))
         } */}
         {imageInfos &&
-          <Button title="Send to Node.js" onPress={this.sendImage} />}
+          <Button title="생성" onPress={this.sendImage} />}
       </View>
     );
 
@@ -164,18 +180,12 @@ export default class Upload extends React.Component<Props, State>{
     }
   }
 
-  goForward = () => {
-    this.carouselRef.current.snapToNext()
-  }
-
   _pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
       aspect: [4, 3],
     });
-
-    console.log(result);
 
     if (!result.cancelled) {
       const length = this.state.imageInfos.length;
