@@ -39,6 +39,7 @@ const EventSchema = new mongoose.Schema({
 var Event = mongoose.model('Event', EventSchema);
 var User = mongoose.model('User', mongoose.Schema({
     id: 'string',
+    password: 'string'
 }));
 
 var Vote = mongoose.model('Vote', mongoose.Schema({
@@ -165,11 +166,27 @@ exports.fetchUsers = () => {
     return User.find();
 }
 
-exports.createUser = (id) => {
-    console.debug("db.js - createUser");
+exports.loginUser = (id,password) => {
+    console.debug("db.js - loginUser", id, password);
 
     return new Promise( (resolve, reject) => {
-        User.create({id:id}, (error, data)=> {
+        User.find({id:id, password:password}, (error, data)=> {
+            if( !data.length )
+            {
+                reject( 'NotExistedUser');
+            }
+            if( error ) {
+                reject( 'LoginUserError' + error );
+            }
+            resolve(data);
+        });
+    })
+}
+exports.createUser = (id,password) => {
+    console.debug("db.js - createUser", id, password);
+
+    return new Promise( (resolve, reject) => {
+        User.create({id, password}, (error, data)=> {
             if (error) {
                 reject( 'UserAlreadyError' );
             }

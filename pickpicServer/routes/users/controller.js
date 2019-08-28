@@ -30,7 +30,7 @@ exports.show = (req, res) => {
 
 exports.create = (req, res) => {
     console.log("controller.js - create");
-    db.createUser(req.body.id)
+    db.createUser(req.body.id, req.body.password)
         .then((result) => {
             console.log("result:" + result);
             res.status(200).send(result);

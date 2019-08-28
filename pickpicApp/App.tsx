@@ -3,8 +3,9 @@ import { Button, Image, StyleSheet, Text, View } from 'react-native';
 import { AppLoading } from "expo";
 import * as Font from 'expo-font';
 
-import AppNavigator from './navigation/AppNavigator';
+import AppNavigator from './src/Navigation/AppNavigator';
 import Signin from './src/Scene/Signin';
+import LoginNavigation from './src/Navigation/LoginNavigation/LoginNavigation'
 
 interface Props {
 
@@ -52,6 +53,6 @@ export default class App extends React.Component<Props, States> {
     if (!isReady) {
       return <AppLoading />;
     }
-    return <Signin/>;
+    return <AppNavigator/>;
   }
 }

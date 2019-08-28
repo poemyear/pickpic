@@ -6,42 +6,59 @@ import {
     StatusBar,
 } from 'react-native';
 import { createStackNavigator, createSwitchNavigator, createAppContainer } from 'react-navigation';
-import t from 'tcomb-form-native';
+import SignUp from '../Signup'
 
-const Form = t.form.Form;
-
-const User = t.struct({
-    email: t.String,
-    username: t.String,
-    password: t.String,
-    terms: t.Boolean
-});
 interface Props {
-
+    navigation: any
 }
 interface State {
     email: string,
     password: string
 }
 
-class SignIn extends React.Component<Props, State> {
+export default class SignIn extends React.Component<Props, State> {
     state = {
         email: '',
         password: '',
     };
+    serverAddress = "http://localhost:3000";
+    LoginRoutes = this.serverAddress + "/login";
 
+    static navigationOptions = {
+        header: null,
+    };
+
+    SignInRequest = async ( email, password ) => {
+        var response = await fetch(this.LoginRoutes, {
+            method: 'post',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'id': email,
+                'password': password
+            })
+        });
+        if (!response.ok) 
+            Alert.alert("ID or Password was wrong.")
+        else   
+            this.props.navigation.navigate('AppNavi');
+
+        console.log(response.status); 
+    }
 
     onLogin() {
         const { email, password } = this.state;
 
-        Alert.alert('Credentials', `email: ${email} + password: ${password}`);
+        //Alert.alert('Credentials', `email: ${email} + password: ${password}`);
+        const result = this.SignInRequest( email, password ); 
     }
 
-    switchSignup() {
-        const { email, password } = this.state;
-
-        Alert.alert('Credentials', `email: ${email} + password: ${password}`);
-    }
+    switchSignUp = async () => {
+        await AsyncStorage.setItem('userToken', 'abc');
+        this.props.navigation.navigate('SignUp');
+    };
 
     render() {
         return (
@@ -72,7 +89,7 @@ class SignIn extends React.Component<Props, State> {
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.button}
-                    onPress={this.switchSignup.bind(this)}
+                    onPress={this.switchSignUp.bind(this)}
                 >
                     <Text style={styles.buttonText}>간편 회원가입</Text>
                 </TouchableOpacity>
@@ -81,16 +98,6 @@ class SignIn extends React.Component<Props, State> {
         );
     }
 }
-
-export default createAppContainer(createSwitchNavigator(
-    {
-        SignIn: SignIn,
-        SignUp: SignUp
-    },
-    {
-        initialRouteName: 'SignIn',
-    }
-));
 
 const styles = StyleSheet.create({
     container: {

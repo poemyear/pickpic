@@ -2,10 +2,10 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { createStackNavigator, createBottomTabNavigator } from 'react-navigation';
 
-import TabBarIcon from '../components/TabBarIcon';
-import PickScreen from '../src/Scene/Pick';
-import UploadScreen from '../src/Scene/Upload';
-import ResultScreen from '../src/Scene/CheckResult';
+import TabBarIcon from '../Component/TabBarIcon';
+import PickScreen from '../Scene/Pick';
+import UploadScreen from '../Scene/Upload';
+import ResultScreen from '../Scene/CheckResult';
 
 const config = Platform.select({
   web: { headerMode: 'screen' },
