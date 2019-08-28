@@ -14,6 +14,7 @@ interface State {
 }
 interface Props {
   emailRef: any
+  navigation:any
 }
 
 export default class SignUp extends React.Component<Props, State> {
@@ -88,6 +89,18 @@ export default class SignUp extends React.Component<Props, State> {
         'password': password
       })
     });
+    
+    if (!response.ok) {
+      return response.json().catch(err => {
+        Alert.alert(response.statusText);
+      }).then(json => {
+        Alert.alert(json.error);
+      });
+    }
+    else { 
+      Alert.alert('회원가입이 완료되었습니다.');
+      this.props.navigation.navigate('SignIn');
+    }
   }
   onSubmit() {
     let errors = {};

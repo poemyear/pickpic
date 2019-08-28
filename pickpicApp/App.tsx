@@ -5,7 +5,6 @@ import * as Font from 'expo-font';
 
 import AppNavigator from './src/Navigation/AppNavigator';
 import Signin from './src/Scene/Signin';
-import LoginNavigation from './src/Navigation/LoginNavigation/LoginNavigation'
 
 interface Props {
 

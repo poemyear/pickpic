@@ -185,13 +185,15 @@ exports.loginUser = (id,password) => {
 exports.createUser = (id,password) => {
     console.debug("db.js - createUser", id, password);
 
-    return new Promise( (resolve, reject) => {
-        User.create({id, password}, (error, data)=> {
-            if (error) {
-                reject( 'UserAlreadyError' );
-            }
-            resolve(data);
-        } );
+    return new Promise( ( resolve, reject ) =>
+    {
+        User.findOne({id}, (err, result) => {
+            if( result ) reject('UserAlreadyError');
+
+            User.create({id, password}, (err, result) => {
+                resolve( result );
+            })
+        })
     });
 }
 
