@@ -25,6 +25,7 @@ expirePhotoHandler.on('ready', function() {
 
 /* DB Schema */
 const EventSchema = new mongoose.Schema({
+    title : 'string',
     owner : 'string',
     createdAt: Date,
     expireAt: Date,
@@ -61,10 +62,11 @@ exports.connect = () => {
     });
 }
 
-exports.createEvent = (owner, photos) => {
+exports.createEvent = (owner, title, photos) => {
     console.log("db.js - createEvent");
 
     var newEvent = new Event({
+        title: title,
         owner: owner,
         createdAt: Date.now(),
         expireAt: moment().add(3600*24*2, 'second'),

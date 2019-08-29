@@ -70,6 +70,7 @@ export default class Upload extends React.Component<Props, State>{
 
     try {
       formdata.append("owner", "bakyuns");
+      formdata.append("title", this.state.title);
       // console.debug(formdata);
       var response = await fetch(this.eventRoute, {
         method: 'post',
