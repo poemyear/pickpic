@@ -11,10 +11,11 @@ interface Props {
 interface State {
     eventIdx: number,
     events: {
-        id: String,
+        id: string,
+        title: string,
         photos: {
-            id: String,
-            uri: String
+            id: string,
+            uri: string
         }[];
     }[];
 }
@@ -96,7 +97,7 @@ export default class Pick extends React.Component<Props, State>{
             const uri = this.serverAddress + "/" + info.path;
             photos.push({ id: photoId, uri });
         }
-        return { id: eventId, photos };
+        return { id: eventId, title: responseJson.title, photos };
     }
 
     async componentDidMount() {
@@ -129,17 +130,19 @@ export default class Pick extends React.Component<Props, State>{
     }
 
     render() {
-        var data = [];
-        if (this.state.eventIdx >= 0)
-            data = this.state.events[this.state.eventIdx].photos;
+        let event = {id: '', title:'', photos:[]};
+        if (this.state.eventIdx >= 0) {
+            event = this.state.events[this.state.eventIdx];
+        }
         return (
             <View>
+                <Text style={styles.title}>{event.title}</Text>
                 <Carousel
                     ref={this.carouselRef}
                     sliderWidth={screenWidth}
                     sliderHeight={screenWidth}
                     itemWidth={screenWidth - 60}
-                    data={data} //{this.state.events[this.state.eventIdx].photos}
+                    data={event.photos}
                     renderItem={this._renderItem}
                     hasParallaxImages={true}
                 />
@@ -175,7 +178,7 @@ const styles = StyleSheet.create({
     title: {
         paddingHorizontal: 30,
         backgroundColor: 'transparent',
-        color: 'rgba(255, 255, 255, 0.9)',
+        // color: 'rgba(255, 255, 255, 0.9)',
         fontSize: 20,
         fontWeight: 'bold',
         textAlign: 'center'
