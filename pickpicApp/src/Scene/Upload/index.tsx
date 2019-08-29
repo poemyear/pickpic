@@ -4,6 +4,7 @@ import * as Permissions from 'expo-permissions';
 import Constants from 'expo-constants';
 import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
 import React, { createRef } from 'react'
+import DatePicker from 'react-native-datepicker'
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -14,7 +15,8 @@ interface State {
     image: any,
     index: number
   }[],
-  title: string
+  title: string,
+  date: Date
 }
 
 interface ImageFile extends Blob {
@@ -27,7 +29,7 @@ interface ImageFile extends Blob {
 
 export default class Upload extends React.Component<Props, State>{
   carouselRef = createRef<Carousel>();
-  state: State = { imageInfos: [], title: "" };
+  state: State = { imageInfos: [], title: "", date: null };
   serverAddress = "http://localhost:3000";
   eventRoute = this.serverAddress + "/events";
   addButtonImage = { uri: this.serverAddress + "/upload/addButton.png" };
@@ -37,7 +39,8 @@ export default class Upload extends React.Component<Props, State>{
 
     this.state = {
       imageInfos: [{ image: this.addButtonImage, index: 0 }],
-      title: "Title을 입력해주세요."
+      title: "Title을 입력해주세요.",
+      date: new Date()
     }
   }
 
@@ -132,6 +135,7 @@ export default class Upload extends React.Component<Props, State>{
   render() {
     let { imageInfos: imageInfos } = this.state;
 
+    console.log(this.state.date);
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <TextInput
@@ -139,6 +143,26 @@ export default class Upload extends React.Component<Props, State>{
           onChangeText={(title) => this.setState({ title })}
           value={this.state.title}
         />
+        <DatePicker
+          style={{ width: 200 }}
+          date={this.state.date}
+          mode="datetime"
+          placeholder="select date"
+          format="YYYY-MM-DD HH:MM"
+          minDate={new Date('2019-05-01')}
+          maxDate={new Date('2019-06-01')}
+          confirmBtnText="Confirm"
+          cancelBtnText="Cancel"
+          locale="kor"
+          customStyles={{
+            dateInput: {
+              marginLeft: 36
+            }
+            // ... You can check the source to find the other keys.
+          }}
+          onDateChange={(date) => {this.setState({date})}}
+        />
+
         <Carousel
           ref={this.carouselRef}
           layout={'stack'}
