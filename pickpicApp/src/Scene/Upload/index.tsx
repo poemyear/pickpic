@@ -135,7 +135,7 @@ export default class Upload extends React.Component<Props, State>{
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <TextInput
-          style={{ height: 40, width:screenWidth-60 }}
+          style={styles.title}
           onChangeText={(title) => this.setState({ title })}
           value={this.state.title}
         />
@@ -149,12 +149,12 @@ export default class Upload extends React.Component<Props, State>{
           renderItem={this._renderItem}
           hasParallaxImages={true}
         />
-        <Button
+        {/* <Button
           title={'Next'}
           onPress={this.snapToNext} />
         <Button
           title={'Prev'}
-          onPress={this.snapToPrev} />
+          onPress={this.snapToPrev} /> */}
         {/* <Image source={require('../../../components/addButton.png')} style={{ width: 200, height: 200 }} /> */}
         {/* {
           imageInfos &&
@@ -163,7 +163,7 @@ export default class Upload extends React.Component<Props, State>{
             <Image key={imageInfo.index} source={{ uri: imageInfo.image.uri }} style={{ width: 200, height: 200 }} />))
         } */}
         {imageInfos &&
-          <Button title="생성" onPress={this.sendImage} />}
+          <Button title="Event 생성" onPress={this.sendImage} />}
       </View>
     );
 
@@ -222,9 +222,10 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   title: {
+    width: screenWidth - 60,
     paddingHorizontal: 30,
     backgroundColor: 'transparent',
-    color: 'rgba(255, 255, 255, 0.9)',
+    // color: 'rgba(255, 255, 255, 0.9)',
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center'

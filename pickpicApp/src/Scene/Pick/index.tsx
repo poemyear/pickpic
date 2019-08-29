@@ -82,6 +82,9 @@ export default class Pick extends React.Component<Props, State>{
         for (let event of responseJson) {
             events.push(await this.parseEvent(event._id));
         }
+        if (events.length == 0) {
+            alert("새로운 투표가 없습니다.")
+        }
         return events;
     }
 
@@ -150,11 +153,14 @@ export default class Pick extends React.Component<Props, State>{
                     title={'Pick'}
                     onPress={this.vote} />
                 <Button
+                    title={'Fetch'}
+                    onPress={this.fetchEvents} />
+                {/* <Button
                     title={'Next'}
                     onPress={this.snapToNext} />
                 <Button
                     title={'Prev'}
-                    onPress={this.snapToPrev} />
+                    onPress={this.snapToPrev} /> */}
             </View>
         );
     }
