@@ -40,7 +40,8 @@ const EventSchema = new mongoose.Schema({
 var Event = mongoose.model('Event', EventSchema);
 var User = mongoose.model('User', mongoose.Schema({
     id: 'string',
-    password: 'string'
+    password: 'string',
+    pushStatus : 'boolean'
 }));
 
 var Vote = mongoose.model('Vote', mongoose.Schema({
@@ -184,6 +185,17 @@ exports.loginUser = (id,password) => {
         });
     })
 }
+exports.patchUser = (id, patchData) => {
+    console.log("db.js - patchUser");
+
+    return new Promise( ( resolve, reject ) => {
+        User.findOneAndUpdate({id}, patchData, (err, result)=> {
+            if( err ) reject( err );
+            console.log(result);
+            resolve( result );
+        });
+    });
+}
 exports.createUser = (id,password) => {
     console.debug("db.js - createUser", id, password);
 
@@ -192,7 +204,7 @@ exports.createUser = (id,password) => {
         User.findOne({id}, (err, result) => {
             if( result ) reject('UserAlreadyError');
 
-            User.create({id, password}, (err, result) => {
+            User.create({id, password, pushStatus:true }, (err, result) => {
                 resolve( result );
             })
         })

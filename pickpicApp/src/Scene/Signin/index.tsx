@@ -5,8 +5,7 @@ import {
     AsyncStorage,
     StatusBar,
 } from 'react-native';
-import { createStackNavigator, createSwitchNavigator, createAppContainer } from 'react-navigation';
-import SignUp from '../Signup'
+import { NavigationActions } from 'react-navigation'
 
 interface Props {
     navigation: any
@@ -27,7 +26,15 @@ export default class SignIn extends React.Component<Props, State> {
     static navigationOptions = {
         header: null,
     };
-
+    constructor(props:props){
+        super(props);
+        AsyncStorage.getItem("account").then((value) => {
+            if (value){
+                console.log('account is existed in asyncstorage')
+                this.props.navigation.navigate('Main');
+            }    
+        })
+    }
     SignInRequest = async ( email, password ) => {
         var response = await fetch(this.LoginRoutes, {
             method: 'post',
@@ -41,9 +48,17 @@ export default class SignIn extends React.Component<Props, State> {
             })
         });
         if (!response.ok) 
-            Alert.alert("ID or Password was wrong.")
-        else   
-            this.props.navigation.navigate('AppNavi');
+            Alert.alert("ID or Password was wrong.");
+        else { 
+            console.log(this.props.navigation);
+
+            setAccount = async (email) => {
+                var result = await AsyncStorage.setItem('account', JSON.stringify({'email':email}));
+                console.log('save account');
+            }
+            setAccount(email);
+            this.props.navigation.navigate('Main');
+        }
 
         console.log(response.status); 
     }
@@ -56,7 +71,6 @@ export default class SignIn extends React.Component<Props, State> {
     }
 
     switchSignUp = async () => {
-        await AsyncStorage.setItem('userToken', 'abc');
         this.props.navigation.navigate('SignUp');
     };
 

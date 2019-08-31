@@ -7,7 +7,6 @@ var bodyParser = require('body-parser')
 var logger = require('morgan');
 
 var eventsRouter = require('./routes/events/index');
-
 var usersRouter = require('./routes/users/index');
 var loginRouter = require('./routes/login/index');
 var fileUploadRouter = require('./routes/upload_example');
@@ -33,7 +32,6 @@ app.use('/login', loginRouter);
 app.use('/events', eventsRouter);
 app.use('/upload', fileUploadRouter);
 app.use('/upload', express.static('upload'));
-
 
 // For POST
 app.use(bodyParser.json());

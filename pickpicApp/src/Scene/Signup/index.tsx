@@ -4,6 +4,7 @@ import t from 'tcomb-form-native';
 import { TextField } from 'react-native-material-textfield';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import { RaisedTextButton } from 'react-native-material-buttons';
+import { NavigationActions } from 'react-navigation'
 import { any } from 'prop-types';
 
 interface State {
@@ -99,7 +100,8 @@ export default class SignUp extends React.Component<Props, State> {
     }
     else { 
       Alert.alert('회원가입이 완료되었습니다.');
-      this.props.navigation.navigate('SignIn');
+      console.log(this.props.navigation);
+      this.props.navigation.dispatch(NavigationActions.back());
     }
   }
   onSubmit() {

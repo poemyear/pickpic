@@ -1,6 +1,24 @@
+
 const db = require('../db');
 
 // /db.connect();
+
+exports.patch = (req, res) => {
+    console.log("controller.js - patch");
+    var patchData = {}
+    if( req.body.hasOwnProperty('pushStatus') ) {
+        patchData['patchStatus'] = req.body.pushStatus;
+    }
+    console.log(patchData);
+    return db.patchUser(req.body.id, patchData)
+        .then((result) => {
+            console.log(result);
+            res.send(result);
+        }).catch((err) => {
+            console.log(err);
+            res.status(400).json({error: 'Patch Error'});
+        });
+}
 
 exports.index = (req, res) => {
     console.log("controller.js - index");
