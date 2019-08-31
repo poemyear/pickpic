@@ -43,7 +43,7 @@ exports.create = (req, res) => {
         return res.status(400).json({ error: 'Invalid Title' });
     }
     if (!expiredAt || !expiredAt.length) {
-        return res.status(400).json({ error: 'Invalid Title' });
+        return res.status(400).json({ error: 'Invalid expiredAt' });
     }
 
     if (req.files.length < 2) {

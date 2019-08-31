@@ -33,7 +33,9 @@ const EventSchema = new mongoose.Schema({
     voters: [],
     photos : [mongoose.Schema({
         path : 'string',
-        filename : 'string'
+        filename : 'string',
+        thumbnail: 'string',
+        thumbnailPath: 'string'
     })]
 });
 
