@@ -35,10 +35,14 @@ exports.create = (req, res) => {
     console.log("controller.js - create");
     const owner = req.body.owner;
     const title = req.body.title;
+    const expiredAt = req.body.expiredAt;
     if (!owner || !owner.length) {
         return res.status(400).json({ error: 'Invalid id' });
     }
     if (!title || !title.length) {
+        return res.status(400).json({ error: 'Invalid Title' });
+    }
+    if (!expiredAt || !expiredAt.length) {
         return res.status(400).json({ error: 'Invalid Title' });
     }
 
@@ -47,7 +51,7 @@ exports.create = (req, res) => {
         return res.status(400).json({ error: 'Upload at least 2 photos' })
     }
 
-    db.createEvent(owner, title, req.files)
+    db.createEvent(owner, title, expiredAt, req.files)
         .then((result) => {
             console.debug(req.headers);
             console.debug(req.body);

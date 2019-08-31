@@ -5,6 +5,7 @@ import Constants from 'expo-constants';
 import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
 import React, { createRef } from 'react'
 import DatePicker from 'react-native-datepicker'
+import moment from "moment";
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -16,7 +17,9 @@ interface State {
     index: number
   }[],
   title: string,
-  date: Date
+  expiredDate: Date,
+  minDate: Date,
+  maxDate: Date
 }
 
 interface ImageFile extends Blob {
@@ -29,19 +32,31 @@ interface ImageFile extends Blob {
 
 export default class Upload extends React.Component<Props, State>{
   carouselRef = createRef<Carousel>();
-  state: State = { imageInfos: [], title: "", date: null };
+  // state: State = { imageInfos: [], title: "", expiredDate: null }``;
   serverAddress = "http://localhost:3000";
   eventRoute = this.serverAddress + "/events";
   addButtonImage = { uri: this.serverAddress + "/upload/addButton.png" };
 
   constructor(props) {
     super(props);
+    this.state = this.initState();
+  }
 
-    this.state = {
+  initState() {
+    let minDate = new Date();
+    let maxDate = new Date();
+    minDate.setDate(minDate.getDate() + 0);
+    maxDate.setDate(minDate.getDate() + 12);
+    const state =
+    {
       imageInfos: [{ image: this.addButtonImage, index: 0 }],
       title: "Title을 입력해주세요.",
-      date: new Date()
-    }
+      expiredDate: minDate,
+      minDate: minDate,
+      maxDate: maxDate,
+    };
+    console.log(minDate);
+    return state;
   }
 
   snapToNext = () => {
@@ -74,6 +89,7 @@ export default class Upload extends React.Component<Props, State>{
     try {
       formdata.append("owner", "bakyuns");
       formdata.append("title", this.state.title);
+      formdata.append("expiredAt", this.state.expiredDate.toISOString());
       // console.debug(formdata);
       var response = await fetch(this.eventRoute, {
         method: 'post',
@@ -93,9 +109,7 @@ export default class Upload extends React.Component<Props, State>{
       console.debug('responseJson', responseJson);
       console.log('image uploaded. id: ', id);
       alert("Event 생성 완료: " + id);
-      this.setState({
-        imageInfos: [{ image: this.addButtonImage, index: 0 }]
-      });
+      this.setState(this.initState());
     } catch (err) {
       console.error(err);
     }
@@ -135,7 +149,6 @@ export default class Upload extends React.Component<Props, State>{
   render() {
     let { imageInfos: imageInfos } = this.state;
 
-    console.log(this.state.date);
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <TextInput
@@ -145,12 +158,12 @@ export default class Upload extends React.Component<Props, State>{
         />
         <DatePicker
           style={{ width: 200 }}
-          date={this.state.date}
+          date={this.state.expiredDate}
           mode="datetime"
           placeholder="select date"
-          format="YYYY-MM-DD HH:MM"
-          minDate={new Date('2019-05-01')}
-          maxDate={new Date('2019-06-01')}
+          format="YYYY-MM-DD HH:mm"
+          minDate={this.state.minDate}
+          maxDate={this.state.maxDate}
           confirmBtnText="Confirm"
           cancelBtnText="Cancel"
           locale="kor"
@@ -160,7 +173,9 @@ export default class Upload extends React.Component<Props, State>{
             }
             // ... You can check the source to find the other keys.
           }}
-          onDateChange={(date) => {this.setState({date})}}
+          onDateChange={(date) => {
+            this.setState({ expiredDate: new Date(moment(date, 'YYYY-MM-DD HH:mm', true).format()) });
+          }}
         />
 
         <Carousel

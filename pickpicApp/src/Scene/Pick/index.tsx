@@ -1,7 +1,7 @@
 import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
 import { Button, Dimensions, StyleSheet, View, Text, Platform } from 'react-native';
 import React, { useRef, createRef } from 'react'
-
+import moment from 'moment';
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -13,6 +13,7 @@ interface State {
     events: {
         id: string,
         title: string,
+        expiredAt: Date,
         photos: {
             id: string,
             uri: string
@@ -94,13 +95,16 @@ export default class Pick extends React.Component<Props, State>{
         console.debug(eventId);
 
         let photos = [];
+        const title = responseJson.title;
+        const expiredAt = new Date(responseJson.expiredAt);
+        
         for (let i = 0; i < responseJson.photos.length; i++) {
             const info = responseJson.photos[i];
             const photoId = info._id;
             const uri = this.serverAddress + "/" + info.path;
             photos.push({ id: photoId, uri });
         }
-        return { id: eventId, title: responseJson.title, photos };
+        return { id: eventId, title, expiredAt, photos };
     }
 
     async componentDidMount() {
@@ -133,13 +137,14 @@ export default class Pick extends React.Component<Props, State>{
     }
 
     render() {
-        let event = {id: '', title:'', photos:[]};
+        let event = { id: '', title: '', photos: [], expiredAt: null };
         if (this.state.eventIdx >= 0) {
             event = this.state.events[this.state.eventIdx];
         }
         return (
             <View>
                 <Text style={styles.title}>{event.title}</Text>
+                <Text style={styles.title}>Expired {moment(event.expiredAt).fromNow()}</Text>
                 <Carousel
                     ref={this.carouselRef}
                     sliderWidth={screenWidth}
