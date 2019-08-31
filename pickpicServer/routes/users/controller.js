@@ -30,12 +30,12 @@ exports.show = (req, res) => {
 
 exports.create = (req, res) => {
     console.log("controller.js - create");
-    db.createUser(req.body.id)
+    db.createUser(req.body.id, req.body.password)
         .then((result) => {
             console.log("result:" + result);
             res.status(200).send(result);
         }).catch((err) => {console
-        .error(err); res.status(400); });
+        .error(err); res.status(400).json({error: 'already exist'}) });
 };
 
 exports.update = (req, res) => {

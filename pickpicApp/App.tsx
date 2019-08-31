@@ -3,7 +3,8 @@ import { Button, Image, StyleSheet, Text, View } from 'react-native';
 import { AppLoading } from "expo";
 import * as Font from 'expo-font';
 
-import AppNavigator from './navigation/AppNavigator';
+import AppNavigator from './src/Navigation/AppNavigator';
+import Signin from './src/Scene/Signin';
 
 interface Props {
 
