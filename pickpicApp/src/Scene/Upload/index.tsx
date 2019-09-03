@@ -45,7 +45,7 @@ export default class Upload extends React.Component<Props, State>{
   initState() {
     let minDate = new Date();
     let maxDate = new Date();
-    minDate.setDate(minDate.getDate() + 0);
+    minDate.setDate(minDate.getDate() + 3);
     maxDate.setDate(minDate.getDate() + 12);
     const state =
     {
