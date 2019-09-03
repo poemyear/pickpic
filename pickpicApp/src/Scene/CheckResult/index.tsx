@@ -1,29 +1,21 @@
 import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
-import { Button, Dimensions, StyleSheet, View, Text, Platform } from 'react-native';
+import { Button, Dimensions, StyleSheet, View, Image, Text, Platform, Switch } from 'react-native';
 import React, { useRef, createRef } from 'react'
 import SliderEntry from "../../Component/SliderEntry.js";
 import Upload from "../Upload";
 import { UserInterfaceIdiom } from 'expo-constants';
+import SwitchButton from "../../Component/SwitchButton.js"
 
 const { width: screenWidth } = Dimensions.get('window')
 interface Props {
 
 }
-/*interface State {
-    event_Id: number,
-    status: {
-        photo_Id:String,
-        filePath:String,
-        count:number
-    }[];
-    loading : string,
-    tab : number    // 0 : 내꺼 , 1 : 남꺼
-}*/
 
 interface State {
     user_Id:string,
     events : {
-        event_Id: string,
+        event_Id:string,
+        title:string,
         status: {
             photo_Id:String,
             filePath:String,
@@ -33,9 +25,9 @@ interface State {
     loading : string,
     tab : number    // 0 : 내꺼 , 1 : 남꺼
 }
+  
 
 export default class CheckResult extends React.Component<Props, State>{
-    carouselRef = createRef<Carousel>();
     serverAddress = "http://localhost:3000";
     eventRoute = this.serverAddress + "/events";
 
@@ -71,7 +63,8 @@ export default class CheckResult extends React.Component<Props, State>{
     
     checkingEventsbyMe = async () => {
         const userId = "5d60e920ca22b86af6f07c68";
-        const checkingOtherResult = this.eventRoute + "eventsbyvoter/" + userId;
+        //const checkingOtherResult = this.eventRoute + "eventsbyvoter/" + userId;
+        const checkingOtherResult = this.eventRoute;
 
         let responseJson = await (await fetch(checkingOtherResult)).json();
         let eventsSet = [];
@@ -84,16 +77,13 @@ export default class CheckResult extends React.Component<Props, State>{
         return resultObj;
     }
 
-
-    fetchEvent = async () => {
-        let responseJson = await (await fetch(this.eventRoute)).json();
-        let event = await this.plotEvent(responseJson[0]._id);
-        return event;
-    }
-
     plotEvent = async (eventId) => {
         let eventInfo = this.eventRoute + "/" + eventId + "/status";
         let responseJson = await (await fetch(eventInfo)).json();
+        let checkingTitle = this.eventRoute + "/" + eventId;
+        let getTitle = await( await fetch(checkingTitle)).json();
+
+        let titleOfEvent = getTitle.title;
 
         let resultInfo = [];
         for (let i = 0; i < responseJson.status.length; i++) {
@@ -103,7 +93,7 @@ export default class CheckResult extends React.Component<Props, State>{
             
             resultInfo.push( { photo_Id : photoId, filePath : path, count : cnt });
         }
-        let resultObj = {event_Id : eventId , status: resultInfo};
+        let resultObj = {event_Id : eventId , title: titleOfEvent, status: resultInfo};
         return resultObj;
     }
 
@@ -116,7 +106,6 @@ export default class CheckResult extends React.Component<Props, State>{
                 this.setState(
                  event
                 );
-                console.log(this.state);
             }
             else if(this.state.tab === 1)
             {
@@ -126,40 +115,42 @@ export default class CheckResult extends React.Component<Props, State>{
                 );
                 console.log(this.state);                
             }
-            /*let event = await this.fetchEvent();
-                this.setState(
-                 event
-                );
-            console.log(this.state);*/
         } catch (err) {
             console.error(err);
         }
         console.log("componentDidMount Exit");
     }
-
-
-    _renderItem = ({ item, index }, parallaxProps) => {
-        return (
-            <View style={styles.item}>
-                <ParallaxImage
-                    source={{ uri: item.uri }}
-                    containerStyle={styles.imageContainer}
-                    style={styles.image}
-                    parallaxFactor={0.4}
-                    {...parallaxProps}
-                />
-                <Text style={styles.title}>{item.title}</Text>
-
-            </View>
-        );
-    }   
+    async changedTab() {
+        console.log("ChangedTab Entrance");
+        console.log("tab : " + this.state.tab);
+        try {
+            if(this.state.tab === 0)
+            {
+                let event = await this.checkingEventsOfMine();
+                this.setState(
+                 event
+                );
+            }
+            else if(this.state.tab === 1)
+            {
+                let event = await this.checkingEventsbyMe();
+                this.setState(
+                 event
+                );
+                console.log(this.state);                
+            }
+        } catch (err) {
+            console.error(err);
+        }
+        console.log("ChangedTab Exit");
+    }
 
     render() {
         if(this.state.loading === 'init'){
             console.log("Setstate Not Finished")
             return <Text style={{fontSize: 20}}> Checking...</Text>
         }
-
+        
         if(this.state.loading === 'finish'){
             console.log("Setstate Finished");
             
@@ -170,43 +161,82 @@ export default class CheckResult extends React.Component<Props, State>{
                 var sortStatusByCount = oriStatus.sort(function(a,b){
                     return b.count - a.count;
                 });
-                sortedEvents.push({event_Id : this.state.events[i].event_Id, status : sortStatusByCount});
+                sortedEvents.push({event_Id : this.state.events[i].event_Id, title : this.state.events[i].title, status : sortStatusByCount});
             }
 
-            console.log(sortedEvents);
-
             var data_all = [];
+            var showStructure = [];
             for(let i of sortedEvents)
             {   
                 var data = [];
+                var pasteData = [];
+                var imageHeight = 160;
+                var imageWidth = 160;
+
                 for(let j of i.status)
                 {
-                    data.push({id : j.photo_Id, uri: j.filePath});
+                    var data_item = {id : j.photo_Id, uri: j.filePath};
+                    data.push(data_item);
+
+                    pasteData.push(
+                        <Image key = {j.photo_Id}
+                        style = {{height : imageHeight, width : imageWidth}}
+                        source = {data_item}
+                        />
+                    )
+                    imageHeight -= 40;
+                    imageWidth -= 40;
                 }
                 data_all.push(data);
+                showStructure.push( 
+                    <View key = {i.event_Id}>
+                        <View>
+                            <Text style = {{fontSize: 20}}>{i.title} </Text>
+                        </View>
+                        <View style = {{flexDirection : 'row',
+                                        padding : 20, borderBottomWidth : 0.5, borderColor : '#444', borderTopWidth : 0.5}}>
+                            
+                            <View style = {{flex : 4, flexDirection : 'row', alignItems : 'baseline', justifyContent: 'flex-start'}}>
+                                {pasteData}
+                            </View>
+                        
+                            <View style = {{flex : 1, alignItems : 'flex-end'}}>
+                                <Button title="..." onPress={this.plotEvent}/>
+                            </View>
+                        </View>    
+                    </View>
+                        
+                    //</View>
+                    
+                )
             }
 
-            var showStructure = [];
-            for(let k = 0 ; k < data_all.length ; k++)
-            {
-                showStructure.push(               
-                    <Carousel key={k}
-                    ref={this.carouselRef}
-                    sliderWidth={screenWidth}
-                    sliderHeight={screenWidth}
-                    itemWidth={screenWidth - 200}
-                    data={data_all[k]} //{this.state.events[this.state.eventIdx].photos}
-                    renderItem={this._renderItem}
-                    hasParallaxImages={true}
-                    />)
-            }
-            
+            console.log("---------------- tab : ",this.state.tab);
             return (
-                //일단 첫번째만 출력하도록 , 값이 들어와서 표출되는지만 확인
-                //어떤 화면으로 어떻게 표출할지는 논의 필요
                 <View>
+                    <View style = {{alignItems : 'center', justifyContent: 'center',
+                        padding : 20, borderBottomWidth : 0.5, borderColor : '#444', borderTopWidth : 0.5}}>
+                        <SwitchButton
+                            onValueChange={(val) => 
+                                {this.setState({ tab: val},this.changedTab)}}      // this is necessary for this component
+                            text1 = 'My Pick'                        // optional: first text in switch button --- default ON
+                            text2 = 'Your Pick'                       // optional: second text in switch button --- default OFF
+                            switchWidth = {250}                 // optional: switch width --- default 44
+                            switchHeight = {44}                 // optional: switch height --- default 100
+                            switchdirection = 'ltr'             // optional: switch button direction ( ltr and rtl ) --- default ltr
+                            switchBorderRadius = {100}          // optional: switch border radius --- default oval
+                            switchSpeedChange = {500}           // optional: button change speed --- default 100
+                            switchBorderColor = '#d4d4d4'       // optional: switch border color --- default #d4d4d4
+                            switchBackgroundColor = '#fff'      // optional: switch background color --- default #fff
+                            btnBorderColor = '#00a4b9'          // optional: button border color --- default #00a4b9
+                            btnBackgroundColor = '#00bcd4'      // optional: button background color --- default #00bcd4
+                            fontColor = '#b1b1b1'               // optional: text font color --- default #b1b1b1
+                            activeFontColor = '#fff'            // optional: active font color --- default #fff
+                        />
+                    </View>
                     {showStructure}
                 </View>
+                
             );
             
         }
