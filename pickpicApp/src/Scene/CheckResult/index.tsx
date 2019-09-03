@@ -151,11 +151,16 @@ export default class CheckResult extends React.Component<Props, State>{
         console.log("ChangedTab Exit");
     }
 
-    changeToDetail = () => {
-
+    exitFromDetail = () => {
+        this.setState( { 
+            isDetail:false,
+            detailIdx: -1
+        })
+    }
+    changeToDetail = (idx:number) => {
         this.setState( { 
             isDetail:true,
-            detailIdx: 0
+            detailIdx: idx
         })
     }
     get renderDetail() {
@@ -183,8 +188,14 @@ export default class CheckResult extends React.Component<Props, State>{
         }
         
         if(this.state.loading === 'finish' && this.state.isDetail == true){
-            return (<View>{this.renderDetail}</View>);
-        
+            return (<View style={{ flex: 1 }}>
+                <View>
+                    <Button title="Exit" onPress={() => this.exitFromDetail()} />
+                </View>
+                <View></View>
+                <View>{this.renderDetail}</View>
+                </View>);
+
         }
 
         if(this.state.loading === 'finish' && this.state.isDetail == false){
@@ -201,14 +212,13 @@ export default class CheckResult extends React.Component<Props, State>{
 
             var data_all = [];
             var showStructure = [];
-            for(let i of sortedEvents)
-            {   
+            sortedEvents.forEach((event, i)=> {
                 var data = [];
                 var pasteData = [];
                 var imageHeight = 160;
                 var imageWidth = 160;
 
-                for(let j of i.status)
+                for(let j of event.status)
                 {
                     var data_item = {id : j.photoId, uri: this.serverAddress + "/" + j.path};
                     data.push(data_item);
@@ -224,9 +234,9 @@ export default class CheckResult extends React.Component<Props, State>{
                 }
                 data_all.push(data);
                 showStructure.push( 
-                    <View key = {i.event_Id}>
+                    <View key = {event.event_Id}>
                         <View>
-                            <Text style = {{fontSize: 20}}>{i.title} </Text>
+                            <Text style = {{fontSize: 20}}>{event.title} </Text>
                         </View>
                         <View style = {{flexDirection : 'row',
                                         padding : 20, borderBottomWidth : 0.5, borderColor : '#444', borderTopWidth : 0.5}}>
@@ -236,7 +246,7 @@ export default class CheckResult extends React.Component<Props, State>{
                             </View>
                         
                             <View style = {{flex : 1, alignItems : 'flex-end'}}>
-                                <Button title="..." onPress={this.changeToDetail}/>
+                                <Button title="..." onPress={()=>this.changeToDetail(i)}/>
                             </View>
                         </View>    
                     </View>
@@ -244,7 +254,7 @@ export default class CheckResult extends React.Component<Props, State>{
                     //</View>
                     
                 )
-            }
+            });
 
             console.log("---------------- tab : ",this.state.tab);
             return (
