@@ -7,5 +7,7 @@
 - yarn add react-native-gesture-handler<br>
 - yarn add moment<br>
 - yarn add react-native-datepicker<br>
+- yarn add react-native-svg<br>
+- yarn add react-native-svg-charts<br>
 ## Expo Packages
 - expo install permission<br>

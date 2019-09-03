@@ -1,0 +1,195 @@
+import { Button, Dimensions, StyleSheet, View, Text, Platform, ProgressViewIOSComponent } from 'react-native';
+import React, { createRef } from 'react'
+import { BarChart, Grid, YAxis } from 'react-native-svg-charts'
+import { Defs, LinearGradient, Text as SvgText, Image as SvgImage, Stop } from "react-native-svg";
+import * as scale from 'd3-scale'
+import { PieChart } from 'react-native-svg-charts'
+import { Circle, G, Line } from 'react-native-svg'
+
+const { width: screenWidth } = Dimensions.get('window')
+interface Props {
+    eventId: string,
+    eventTitle: string,
+    eventStatus: string,
+    eventCreatedAt: string,
+    eventExpiredAt: string, 
+    eventResult: {
+        photoId: string, 
+        path: string,
+        count: number, 
+        key: string,
+        // svg: any,
+        thumbnailPath: string
+    }[]
+}
+interface State {
+    // colors:any[]
+    data: {
+        photoId: string, 
+        path: string,
+        count: number, 
+        key: string,
+        svg: {fill:string},
+        thumbnailPath: string
+    }[]
+}
+
+export default class Detail extends React.Component<Props, State>{
+    serverAddress = "http://localhost:3000";
+    eventRoute = this.serverAddress + "/events";
+
+    constructor(props: Props) {
+        super(props);
+        const randomColor = () => {
+           return { fill: ('#' + (Math.random() * 0xFFFFFF << 0).toString(16) + '000000').slice(0, 7)};
+        }
+        let results = [];
+        
+        this.props.eventResult.map( result => results.push({...result, svg: randomColor()}));
+        this.state = { 
+            data: results
+        };
+        console.log(results);
+    }
+
+    render() {
+        const Gradient = () => (
+            <Defs key={'gradient'}>
+                <LinearGradient id={'gradient'} x1={'0%'} y1={'0%'} x2={'100%'} y2={'0%'}>
+                    <Stop offset={'0%'} stopColor={'rgb(134, 65, 244)'} />
+                    <Stop offset={'100%'} stopColor={'rgb(66, 194, 244)'} />
+                </LinearGradient>
+            </Defs>
+        )
+
+        const CUT_OFF = 5;
+        const PieLabels = ({ slices }) => {
+            // console.log("SLICE:", slices);
+            return slices.map((slice, index) => {
+                const { labelCentroid, pieCentroid, data } = slice;
+                return (
+                    <G key={index}>
+                        <Line
+                            x1={labelCentroid[0]}
+                            y1={labelCentroid[1]}
+                            x2={pieCentroid[0]}
+                            y2={pieCentroid[1]}
+                            stroke={data.svg.fill}
+                        />
+                        {/* <Circle
+                                cx={ labelCentroid[ 0 ] }
+                                cy={ labelCentroid[ 1 ] }
+                                r={ 15 }
+                                fill={ data.svg.fill }
+                            /> */}
+                        <SvgImage
+                            x={labelCentroid[0]}
+                            y={labelCentroid[1]}
+                            width={20}
+                            height={20}
+                            preserveAspectRatio="xMidYMid slice"
+                            opacity="1"
+                            href={{ uri: "http://localhost:3000/" + data.thumbnailPath }}
+                        />
+                    </G>
+                )
+            })
+        }
+
+        const Labelss = ({ x, y, bandwidth, data }) => (
+            data.map((value, index) => (
+                // <SvgText
+                //     key={ index }
+                //     x={ value.count > 5 ? x(0) + 10 : x(value.count) + 10 }
+                //     y={ y(index) + (bandwidth / 2) }
+                //     fontSize={ 14 }
+                //     fill={ value.count > 5 ? 'white' : 'black' }
+                //     alignmentBaseline={ 'middle' }
+                // >
+                //     {value.count}
+                // </SvgText>
+                <SvgImage
+                    x={value.count > 5 ? x(0) + 10 : x(value.count) + 10}
+                    y={y(index) + (bandwidth / 2)}
+                    width={20}
+                    height={20}
+                    preserveAspectRatio="xMidYMid slice"
+                    opacity="1"
+                    href={{ uri: "http://localhost:3000/" + value.thumbnailPath }}
+                />
+            ))
+        )
+        const srcData = this.state.data;
+        return (
+            //일단 첫번째만 출력하도록 , 값이 들어와서 표출되는지만 확인
+            //어떤 화면으로 어떻게 표출할지는 논의 필요
+            <View>
+                <Text> {this.props.eventTitle} </Text>
+                <View style={{ flexDirection: 'row', height: 200, paddingVertical: 16 }}>
+                    <YAxis
+                        data={srcData}
+                        yAccessor={({ index }) => index}
+                        scale={scale.scaleBand}
+                        contentInset={{ top: 10, bottom: 10 }}
+                        // contentInset={{ top: 10, bottom: 10, left:100, right:100 }}
+                        spacing={0.2}
+                        formatLabel={(_, index) => srcData[index].key}
+                    />
+                    <BarChart
+                        style={{ flex: 1, marginLeft: 8 }}
+                        data={srcData}
+                        horizontal={true}
+                        yAccessor={({ item }) => item.count}
+                        contentInset={{ top: 10, bottom: 10 }}
+                        spacing={0.2}
+                        gridMin={0}
+                    >
+                        {/* <Grid direction={Grid.Direction.VERTICAL}/> */}
+                        <Labelss />
+                    </BarChart>
+                </View>
+                <View>
+
+                    <PieChart
+                        style={{ height: 200 }}
+                        data={srcData}
+                        valueAccessor={({ item }) => item.count}
+                        innerRadius={20}
+                        outerRadius={55}
+                        labelRadius={80}
+                    >
+                        <PieLabels />
+                    </PieChart>
+                </View>
+            </View>
+        );
+
+    }
+}
+
+
+const styles = StyleSheet.create({
+    item: {
+        width: screenWidth - 150,
+        height: screenWidth - 150,
+    },
+    imageContainer: {
+        flex: 1,
+        marginBottom: Platform.select({ ios: 0, android: 1 }), // Prevent a random Android rendering issue
+        backgroundColor: 'white',
+        borderRadius: 8,
+    },
+    image: {
+        ...StyleSheet.absoluteFillObject,
+        resizeMode: 'cover',
+    },
+    title: {
+        paddingHorizontal: 30,
+        backgroundColor: 'transparent',
+        color: 'rgba(255, 255, 255, 0.9)',
+        fontSize: 20,
+        fontWeight: 'bold',
+        textAlign: 'center'
+    },
+})
+

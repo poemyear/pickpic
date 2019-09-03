@@ -79,9 +79,9 @@ exports.status = (req, res) => {
                             break;
                         }
                     }
-                    return { _id: photo._id, path: photo.path, count };
+                    return { _id: photo._id, path: photo.path, count, thumbnailPath: photo.thumbnailPath };
                 });
-                res.status(200).json({ status: ret });
+                res.status(200).json({ title: result.title, status: result.status, createdAt:result.createdAt, expiredAt:result.expiredAt, result: ret});
             }).catch((err) => {
                 console
                     .error(err); res.status(400);
