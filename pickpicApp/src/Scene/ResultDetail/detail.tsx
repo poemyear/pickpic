@@ -5,6 +5,7 @@ import { Defs, LinearGradient, Text as SvgText, Image as SvgImage, Stop } from "
 import * as scale from 'd3-scale'
 import { PieChart } from 'react-native-svg-charts'
 import { Circle, G, Line } from 'react-native-svg'
+import moment from 'moment';
 
 const { width: screenWidth } = Dimensions.get('window')
 interface Props {
@@ -12,24 +13,23 @@ interface Props {
     eventTitle: string,
     eventStatus: string,
     eventCreatedAt: string,
-    eventExpiredAt: string, 
+    eventExpiredAt: string,
     eventResult: {
-        photoId: string, 
+        photoId: string,
         path: string,
-        count: number, 
+        count: number,
         key: string,
         // svg: any,
         thumbnailPath: string
     }[]
 }
 interface State {
-    // colors:any[]
     data: {
-        photoId: string, 
+        photoId: string,
         path: string,
-        count: number, 
+        count: number,
         key: string,
-        svg: {fill:string},
+        svg: { fill: string },
         thumbnailPath: string
     }[]
 }
@@ -41,15 +41,11 @@ export default class Detail extends React.Component<Props, State>{
     constructor(props: Props) {
         super(props);
         const randomColor = () => {
-           return { fill: ('#' + (Math.random() * 0xFFFFFF << 0).toString(16) + '000000').slice(0, 7)};
+            return { fill: ('#' + (Math.random() * 0xFFFFFF << 0).toString(16) + '000000').slice(0, 7) };
         }
-        let results = [];
-        
-        this.props.eventResult.map( result => results.push({...result, svg: randomColor()}));
-        this.state = { 
-            data: results
-        };
-        console.log(results);
+        let data = [];
+        this.props.eventResult.map(result => data.push({ ...result, svg: randomColor() }));
+        this.state = { data };
     }
 
     render() {
@@ -64,7 +60,6 @@ export default class Detail extends React.Component<Props, State>{
 
         const CUT_OFF = 5;
         const PieLabels = ({ slices }) => {
-            // console.log("SLICE:", slices);
             return slices.map((slice, index) => {
                 const { labelCentroid, pieCentroid, data } = slice;
                 return (
@@ -96,7 +91,7 @@ export default class Detail extends React.Component<Props, State>{
             })
         }
 
-        const Labelss = ({ x, y, bandwidth, data }) => (
+        const Labels = ({ x, y, bandwidth, data }) => (
             data.map((value, index) => (
                 // <SvgText
                 //     key={ index }
@@ -109,11 +104,13 @@ export default class Detail extends React.Component<Props, State>{
                 //     {value.count}
                 // </SvgText>
                 <SvgImage
+                    key={this.props.eventId + index}
                     x={value.count > 5 ? x(0) + 10 : x(value.count) + 10}
-                    y={y(index) + (bandwidth / 2)}
-                    width={20}
-                    height={20}
-                    preserveAspectRatio="xMidYMid slice"
+                    y={y(index)}// + (bandwidth / 2)}
+                    width={bandwidth}
+                    height={bandwidth}
+                    // preserveAspectRatio="xMidYMid slice"
+                    preserveAspectRatio="none"
                     opacity="1"
                     href={{ uri: "http://localhost:3000/" + value.thumbnailPath }}
                 />
@@ -124,8 +121,14 @@ export default class Detail extends React.Component<Props, State>{
             //일단 첫번째만 출력하도록 , 값이 들어와서 표출되는지만 확인
             //어떤 화면으로 어떻게 표출할지는 논의 필요
             <View>
-                <Text> {this.props.eventTitle} </Text>
-                <View style={{ flexDirection: 'row', height: 200, paddingVertical: 16 }}>
+                <View>
+                    <Text> Title: {this.props.eventTitle} </Text>
+                    <Text> Status: {this.props.eventStatus} </Text>
+                    <Text> CreatedAt: {this.props.eventCreatedAt} </Text>
+                    <Text> ExpiredAt: {this.props.eventExpiredAt} </Text>
+                    <Text> Expired {moment(this.props.eventExpiredAt).fromNow()}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', width: '90%', height: '60%', paddingVertical: 16 }}>
                     <YAxis
                         data={srcData}
                         yAccessor={({ index }) => index}
@@ -145,11 +148,10 @@ export default class Detail extends React.Component<Props, State>{
                         gridMin={0}
                     >
                         {/* <Grid direction={Grid.Direction.VERTICAL}/> */}
-                        <Labelss />
+                        <Labels x={0} y={0} bandwidth={20} data={srcData} />
                     </BarChart>
                 </View>
                 <View>
-
                     <PieChart
                         style={{ height: 200 }}
                         data={srcData}
@@ -158,7 +160,7 @@ export default class Detail extends React.Component<Props, State>{
                         outerRadius={55}
                         labelRadius={80}
                     >
-                        <PieLabels />
+                        <PieLabels slices={srcData} />
                     </PieChart>
                 </View>
             </View>

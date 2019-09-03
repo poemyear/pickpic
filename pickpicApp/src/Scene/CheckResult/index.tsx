@@ -15,25 +15,28 @@ interface Props {
 }
 
 interface State {
-    user_Id:string,
-    events : {
-        event_Id:string,
-        title:string,
+    user_Id: string,
+    events: {
+        event_Id: string,
+        title: string,
+        status: string,
+        createdAt: string,
+        expiredAt: string,
         result: {
-            photoId:string,
-            path:string,
-            thumbnailPath:string,
-            count:number,
-            svg:any, 
+            photoId: string,
+            path: string,
+            thumbnailPath: string,
+            count: number,
+            svg: any,
             key: string
         }[];
     }[]
-    loading : string,
-    tab : number,    // 0 : 내꺼 , 1 : 남꺼
-    isDetail: boolean, 
+    loading: string,
+    tab: number,    // 0 : 내꺼 , 1 : 남꺼
+    isDetail: boolean,
     detailIdx: number,
 }
-  
+
 
 export default class CheckResult extends React.Component<Props, State>{
     serverAddress = "http://localhost:3000";
@@ -42,11 +45,11 @@ export default class CheckResult extends React.Component<Props, State>{
     constructor(props: Props) {
         super(props);
         this.state = {
-            user_Id : "",
-            events : [],
-            loading : "init",
-            tab : 0,
-            isDetail : false,
+            user_Id: "",
+            events: [],
+            loading: "init",
+            tab: 0,
+            isDetail: false,
             detailIdx: -1,
             /*event_Id: 0,
             status: [],
@@ -62,15 +65,14 @@ export default class CheckResult extends React.Component<Props, State>{
 
         let responseJson = await (await fetch(checkingMyResult)).json();
         let eventsSet = [];
-        
-        for( let event of responseJson)
-        {
+
+        for (let event of responseJson) {
             eventsSet.push(await this.plotEvent(event._id));
         }
-        let resultObj = {user_Id : userId, events : eventsSet, loading : "finish", tab : 0};
+        let resultObj = { user_Id: userId, events: eventsSet, loading: "finish", tab: 0 };
         return resultObj;
     }
-    
+
     checkingEventsbyMe = async () => {
         const userId = "5d60e920ca22b86af6f07c68";
         //const checkingOtherResult = this.eventRoute + "eventsbyvoter/" + userId;
@@ -78,11 +80,11 @@ export default class CheckResult extends React.Component<Props, State>{
 
         let responseJson = await (await fetch(checkingOtherResult)).json();
         let eventsSet = [];
-        
-        for( let event of responseJson) {
+
+        for (let event of responseJson) {
             eventsSet.push(await this.plotEvent(event._id));
         }
-        let resultObj = {user_Id : userId, events : eventsSet, loading : "finish", tab : 1};
+        let resultObj = { user_Id: userId, events: eventsSet, loading: "finish", tab: 1 };
         return resultObj;
     }
 
@@ -91,35 +93,40 @@ export default class CheckResult extends React.Component<Props, State>{
         let responseJson = await (await fetch(eventInfo)).json();
         let resultInfo = [];
         for (const [i, result] of responseJson.result.entries()) {
-            resultInfo.push( { 
-                photoId : result._id, 
-                path: result.path, 
-                count: result.count + Math.random()%20, 
-                thumbnailPath:result.thumbnailPath, 
+            resultInfo.push({
+                photoId: result._id,
+                path: result.path,
+                count: result.count + Math.random() % 20,
+                thumbnailPath: result.thumbnailPath,
                 key: i
-                });
+            });
         }
-        let resultObj = {event_Id : eventId , title: responseJson.title, status: responseJson.status, result: resultInfo};
+        let resultObj = {
+            event_Id: eventId,
+            title: responseJson.title,
+            status: responseJson.status,
+            createdAt: responseJson.createdAt,
+            expiredAt: responseJson.expiredAt,
+            result: resultInfo
+        };
         return resultObj;
     }
 
     async componentDidMount() {
         console.log("componentDidMount Entrance");
         try {
-            if(this.state.tab === 0)
-            {
+            if (this.state.tab === 0) {
                 let event = await this.checkingEventsOfMine();
                 this.setState(
-                 event
+                    event
                 );
             }
-            else if(this.state.tab === 1)
-            {
+            else if (this.state.tab === 1) {
                 let event = await this.checkingEventsbyMe();
                 this.setState(
-                 event
+                    event
                 );
-                console.log(this.state);                
+                console.log(this.state);
             }
         } catch (err) {
             console.error(err);
@@ -130,20 +137,18 @@ export default class CheckResult extends React.Component<Props, State>{
         console.log("ChangedTab Entrance");
         console.log("tab : " + this.state.tab);
         try {
-            if(this.state.tab === 0)
-            {
+            if (this.state.tab === 0) {
                 let event = await this.checkingEventsOfMine();
                 this.setState(
-                 event
+                    event
                 );
             }
-            else if(this.state.tab === 1)
-            {
+            else if (this.state.tab === 1) {
                 let event = await this.checkingEventsbyMe();
                 this.setState(
-                 event
+                    event
                 );
-                console.log(this.state);                
+                console.log(this.state);
             }
         } catch (err) {
             console.error(err);
@@ -152,14 +157,14 @@ export default class CheckResult extends React.Component<Props, State>{
     }
 
     exitFromDetail = () => {
-        this.setState( { 
-            isDetail:false,
+        this.setState({
+            isDetail: false,
             detailIdx: -1
         })
     }
-    changeToDetail = (idx:number) => {
-        this.setState( { 
-            isDetail:true,
+    changeToDetail = (idx: number) => {
+        this.setState({
+            isDetail: true,
             detailIdx: idx
         })
     }
@@ -170,123 +175,122 @@ export default class CheckResult extends React.Component<Props, State>{
             <Detail
                 eventTitle={detailEvent.title}
                 eventId={detailEvent.event_Id}
-                eventCreatedAt={"test"}
-                eventExpiredAt={"test"}
-                // eventCreatedAt={detailEvent.createdAt}
-                // eventExpiredAt={detailEvent.expiredAt}
+                eventCreatedAt={detailEvent.createdAt}
+                eventExpiredAt={detailEvent.expiredAt}
                 eventResult={detailEvent.result}
-                //eventStatus={detailEvent.status}
-                eventStatus={"test"}
+                eventStatus={detailEvent.status}
             />
-            )
+        )
     }
 
     render() {
-        if(this.state.loading === 'init'){
+        if (this.state.loading === 'init') {
             console.log("Setstate Not Finished")
-            return <Text style={{fontSize: 20}}> Checking...</Text>
+            return <Text style={{ fontSize: 20 }}> Checking...</Text>
         }
-        
-        if(this.state.loading === 'finish' && this.state.isDetail == true){
+
+        if (this.state.loading === 'finish' && this.state.isDetail == true) {
             return (<View style={{ flex: 1 }}>
                 <View>
                     <Button title="Exit" onPress={() => this.exitFromDetail()} />
                 </View>
                 <View></View>
                 <View>{this.renderDetail}</View>
-                </View>);
+            </View>);
 
         }
 
-        if(this.state.loading === 'finish' && this.state.isDetail == false){
+        if (this.state.loading === 'finish' && this.state.isDetail == false) {
             console.log("Setstate Finished");
-            
+
             var sortedEvents = [];
             for (let event of this.state.events) {
                 let oriStatus = event.result;
-                var sortStatusByCount = oriStatus.sort(function(a,b){
+                var sortStatusByCount = oriStatus.sort(function (a, b) {
                     return b.count - a.count;
                 });
-                sortedEvents.push({event_Id : event.event_Id, title : event.title, status : sortStatusByCount});
+                sortedEvents.push({ event_Id: event.event_Id, title: event.title, status: sortStatusByCount });
             }
 
             var data_all = [];
             var showStructure = [];
-            sortedEvents.forEach((event, i)=> {
+            sortedEvents.forEach((event, i) => {
                 var data = [];
                 var pasteData = [];
                 var imageHeight = 160;
                 var imageWidth = 160;
 
-                for(let j of event.status)
-                {
-                    var data_item = {id : j.photoId, uri: this.serverAddress + "/" + j.path};
+                for (let j of event.status) {
+                    var data_item = { id: j.photoId, uri: this.serverAddress + "/" + j.path };
                     data.push(data_item);
 
                     pasteData.push(
-                        <Image key = {j.photoId}
-                        style = {{height : imageHeight, width : imageWidth}}
-                        source = {data_item}
+                        <Image key={j.photoId}
+                            style={{ height: imageHeight, width: imageWidth }}
+                            source={data_item}
                         />
                     )
                     imageHeight -= 40;
                     imageWidth -= 40;
                 }
                 data_all.push(data);
-                showStructure.push( 
-                    <View key = {event.event_Id}>
+                showStructure.push(
+                    <View key={event.event_Id}>
                         <View>
-                            <Text style = {{fontSize: 20}}>{event.title} </Text>
+                            <Text style={{ fontSize: 20 }}>{event.title} </Text>
                         </View>
-                        <View style = {{flexDirection : 'row',
-                                        padding : 20, borderBottomWidth : 0.5, borderColor : '#444', borderTopWidth : 0.5}}>
-                            
-                            <View style = {{flex : 4, flexDirection : 'row', alignItems : 'baseline', justifyContent: 'flex-start'}}>
+                        <View style={{
+                            flexDirection: 'row',
+                            padding: 20, borderBottomWidth: 0.5, borderColor: '#444', borderTopWidth: 0.5
+                        }}>
+
+                            <View style={{ flex: 4, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'flex-start' }}>
                                 {pasteData}
                             </View>
-                        
-                            <View style = {{flex : 1, alignItems : 'flex-end'}}>
-                                <Button title="..." onPress={()=>this.changeToDetail(i)}/>
+
+                            <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                                <Button title="..." onPress={() => this.changeToDetail(i)} />
                             </View>
-                        </View>    
+                        </View>
                     </View>
-                        
+
                     //</View>
-                    
+
                 )
             });
 
-            console.log("---------------- tab : ",this.state.tab);
+            console.log("---------------- tab : ", this.state.tab);
             return (
                 <View>
-                    <View style = {{alignItems : 'center', justifyContent: 'center',
-                        padding : 20, borderBottomWidth : 0.5, borderColor : '#444', borderTopWidth : 0.5}}>
+                    <View style={{
+                        alignItems: 'center', justifyContent: 'center',
+                        padding: 20, borderBottomWidth: 0.5, borderColor: '#444', borderTopWidth: 0.5
+                    }}>
                         <SwitchButton
-                            onValueChange={(val) => 
-                                {this.setState({ tab: val},this.changedTab)}}      // this is necessary for this component
-                            text1 = 'My Pick'                        // optional: first text in switch button --- default ON
-                            text2 = 'Your Pick'                       // optional: second text in switch button --- default OFF
-                            switchWidth = {250}                 // optional: switch width --- default 44
-                            switchHeight = {44}                 // optional: switch height --- default 100
-                            switchdirection = 'ltr'             // optional: switch button direction ( ltr and rtl ) --- default ltr
-                            switchBorderRadius = {100}          // optional: switch border radius --- default oval
-                            switchSpeedChange = {500}           // optional: button change speed --- default 100
-                            switchBorderColor = '#d4d4d4'       // optional: switch border color --- default #d4d4d4
-                            switchBackgroundColor = '#fff'      // optional: switch background color --- default #fff
-                            btnBorderColor = '#00a4b9'          // optional: button border color --- default #00a4b9
-                            btnBackgroundColor = '#00bcd4'      // optional: button background color --- default #00bcd4
-                            fontColor = '#b1b1b1'               // optional: text font color --- default #b1b1b1
-                            activeFontColor = '#fff'            // optional: active font color --- default #fff
+                            onValueChange={(val) => { this.setState({ tab: val }, this.changedTab) }}      // this is necessary for this component
+                            text1='My Pick'                        // optional: first text in switch button --- default ON
+                            text2='Your Pick'                       // optional: second text in switch button --- default OFF
+                            switchWidth={250}                 // optional: switch width --- default 44
+                            switchHeight={44}                 // optional: switch height --- default 100
+                            switchdirection='ltr'             // optional: switch button direction ( ltr and rtl ) --- default ltr
+                            switchBorderRadius={100}          // optional: switch border radius --- default oval
+                            switchSpeedChange={500}           // optional: button change speed --- default 100
+                            switchBorderColor='#d4d4d4'       // optional: switch border color --- default #d4d4d4
+                            switchBackgroundColor='#fff'      // optional: switch background color --- default #fff
+                            btnBorderColor='#00a4b9'          // optional: button border color --- default #00a4b9
+                            btnBackgroundColor='#00bcd4'      // optional: button background color --- default #00bcd4
+                            fontColor='#b1b1b1'               // optional: text font color --- default #b1b1b1
+                            activeFontColor='#fff'            // optional: active font color --- default #fff
                         />
                     </View>
                     {showStructure}
                 </View>
-                
+
             );
-            
+
         }
 
-      }
+    }
 }
 
 const styles = StyleSheet.create({
