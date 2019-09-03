@@ -6,6 +6,9 @@ import Upload from "../Upload";
 import { UserInterfaceIdiom } from 'expo-constants';
 import SwitchButton from "../../Component/SwitchButton.js"
 
+import Detail from '../ResultDetail/detail'
+
+
 const { width: screenWidth } = Dimensions.get('window')
 interface Props {
 
@@ -16,14 +19,19 @@ interface State {
     events : {
         event_Id:string,
         title:string,
-        status: {
-            photo_Id:String,
-            filePath:String,
-            count:number
+        result: {
+            photoId:string,
+            path:string,
+            thumbnailPath:string,
+            count:number,
+            svg:any, 
+            key: string
         }[];
     }[]
     loading : string,
-    tab : number    // 0 : 내꺼 , 1 : 남꺼
+    tab : number,    // 0 : 내꺼 , 1 : 남꺼
+    isDetail: boolean, 
+    detailIdx: number,
 }
   
 
@@ -37,7 +45,9 @@ export default class CheckResult extends React.Component<Props, State>{
             user_Id : "",
             events : [],
             loading : "init",
-            tab : 0
+            tab : 0,
+            isDetail : false,
+            detailIdx: -1,
             /*event_Id: 0,
             status: [],
             loading : "init",
@@ -69,8 +79,7 @@ export default class CheckResult extends React.Component<Props, State>{
         let responseJson = await (await fetch(checkingOtherResult)).json();
         let eventsSet = [];
         
-        for( let event of responseJson)
-        {
+        for( let event of responseJson) {
             eventsSet.push(await this.plotEvent(event._id));
         }
         let resultObj = {user_Id : userId, events : eventsSet, loading : "finish", tab : 1};
@@ -80,20 +89,17 @@ export default class CheckResult extends React.Component<Props, State>{
     plotEvent = async (eventId) => {
         let eventInfo = this.eventRoute + "/" + eventId + "/status";
         let responseJson = await (await fetch(eventInfo)).json();
-        let checkingTitle = this.eventRoute + "/" + eventId;
-        let getTitle = await( await fetch(checkingTitle)).json();
-
-        let titleOfEvent = getTitle.title;
-
         let resultInfo = [];
-        for (let i = 0; i < responseJson.status.length; i++) {
-            const photoId = responseJson.status[i]._id;
-            const path = this.serverAddress + "/"+ responseJson.status[i].path;
-            const cnt = responseJson.status[i].count;
-            
-            resultInfo.push( { photo_Id : photoId, filePath : path, count : cnt });
+        for (const [i, result] of responseJson.result.entries()) {
+            resultInfo.push( { 
+                photoId : result._id, 
+                path: result.path, 
+                count: result.count + Math.random()%20, 
+                thumbnailPath:result.thumbnailPath, 
+                key: i
+                });
         }
-        let resultObj = {event_Id : eventId , title: titleOfEvent, status: resultInfo};
+        let resultObj = {event_Id : eventId , title: responseJson.title, status: responseJson.status, result: resultInfo};
         return resultObj;
     }
 
@@ -145,23 +151,52 @@ export default class CheckResult extends React.Component<Props, State>{
         console.log("ChangedTab Exit");
     }
 
+    changeToDetail = () => {
+
+        this.setState( { 
+            isDetail:true,
+            detailIdx: 0
+        })
+    }
+    get renderDetail() {
+        const detailEvent = this.state.events[this.state.detailIdx];
+        console.log(detailEvent);
+        return (
+            <Detail
+                eventTitle={detailEvent.title}
+                eventId={detailEvent.event_Id}
+                eventCreatedAt={"test"}
+                eventExpiredAt={"test"}
+                // eventCreatedAt={detailEvent.createdAt}
+                // eventExpiredAt={detailEvent.expiredAt}
+                eventResult={detailEvent.result}
+                //eventStatus={detailEvent.status}
+                eventStatus={"test"}
+            />
+            )
+    }
+
     render() {
         if(this.state.loading === 'init'){
             console.log("Setstate Not Finished")
             return <Text style={{fontSize: 20}}> Checking...</Text>
         }
         
-        if(this.state.loading === 'finish'){
+        if(this.state.loading === 'finish' && this.state.isDetail == true){
+            return (<View>{this.renderDetail}</View>);
+        
+        }
+
+        if(this.state.loading === 'finish' && this.state.isDetail == false){
             console.log("Setstate Finished");
             
             var sortedEvents = [];
-            for(let i = 0 ; i < this.state.events.length ; i++)
-            {
-                let oriStatus = this.state.events[i].status;
+            for (let event of this.state.events) {
+                let oriStatus = event.result;
                 var sortStatusByCount = oriStatus.sort(function(a,b){
                     return b.count - a.count;
                 });
-                sortedEvents.push({event_Id : this.state.events[i].event_Id, title : this.state.events[i].title, status : sortStatusByCount});
+                sortedEvents.push({event_Id : event.event_Id, title : event.title, status : sortStatusByCount});
             }
 
             var data_all = [];
@@ -175,11 +210,11 @@ export default class CheckResult extends React.Component<Props, State>{
 
                 for(let j of i.status)
                 {
-                    var data_item = {id : j.photo_Id, uri: j.filePath};
+                    var data_item = {id : j.photoId, uri: this.serverAddress + "/" + j.path};
                     data.push(data_item);
 
                     pasteData.push(
-                        <Image key = {j.photo_Id}
+                        <Image key = {j.photoId}
                         style = {{height : imageHeight, width : imageWidth}}
                         source = {data_item}
                         />
@@ -201,7 +236,7 @@ export default class CheckResult extends React.Component<Props, State>{
                             </View>
                         
                             <View style = {{flex : 1, alignItems : 'flex-end'}}>
-                                <Button title="..." onPress={this.plotEvent}/>
+                                <Button title="..." onPress={this.changeToDetail}/>
                             </View>
                         </View>    
                     </View>
