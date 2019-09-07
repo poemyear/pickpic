@@ -99,9 +99,9 @@ export default class Pick extends React.Component<Props, State>{
         for (let event of responseJson) {
             events.push(await this.parseEvent(event._id));
         }
-        if (events.length == 0) {
-            alert("새로운 투표가 없습니다.")
-        }
+        // if (events.length == 0) {
+            // alert("새로운 투표가 없습니다.")
+        // }
         return events;
     }
 
