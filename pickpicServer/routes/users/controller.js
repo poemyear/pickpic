@@ -1,6 +1,24 @@
+
 const db = require('../db');
 
 // /db.connect();
+
+exports.patch = (req, res) => {
+    console.log("controller.js - patch");
+    var patchData = {}
+    if( req.body.hasOwnProperty('pushStatus') ) {
+        patchData['patchStatus'] = req.body.pushStatus;
+    }
+    console.log(patchData);
+    return db.patchUser(req.body.id, patchData)
+        .then((result) => {
+            console.log(result);
+            res.send(result);
+        }).catch((err) => {
+            console.log(err);
+            res.status(400).json({error: 'Patch Error'});
+        });
+}
 
 exports.index = (req, res) => {
     console.log("controller.js - index");
@@ -30,12 +48,12 @@ exports.show = (req, res) => {
 
 exports.create = (req, res) => {
     console.log("controller.js - create");
-    db.createUser(req.body.id)
+    db.createUser(req.body.id, req.body.password)
         .then((result) => {
             console.log("result:" + result);
             res.status(200).send(result);
         }).catch((err) => {console
-        .error(err); res.status(400); });
+        .error(err); res.status(400).json({error: 'already exist'}) });
 };
 
 exports.update = (req, res) => {

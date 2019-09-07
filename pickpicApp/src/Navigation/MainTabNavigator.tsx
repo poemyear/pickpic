@@ -2,10 +2,11 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { createStackNavigator, createBottomTabNavigator } from 'react-navigation';
 
-import TabBarIcon from '../components/TabBarIcon';
-import PickScreen from '../src/Scene/Pick';
-import UploadScreen from '../src/Scene/Upload';
-import ResultScreen from '../src/Scene/CheckResult';
+import TabBarIcon from '../Component/TabBarIcon';
+import PickScreen from '../Scene/Pick';
+import UploadScreen from '../Scene/Upload';
+import ResultScreen from '../Scene/CheckResult';
+import AccountScreen from '../Scene/Account';
 
 const config = Platform.select({
   web: { headerMode: 'screen' },
@@ -48,25 +49,6 @@ UploadStack.navigationOptions = {
   ),
 };
 
-// UploadStack.path = '';
-
-const UserStack = createStackNavigator(
-  {
-    Pick: PickScreen,
-  },
-  // config
-);
-
-UserStack.navigationOptions = {
-  tabBarLabel: 'User',
-  tabBarIcon: ({ focused }) => (
-    <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-options' : 'md-options'} />
-  ),
-};
-
-// UserStack.path = '';
-
-
 const ResultStack = createStackNavigator(
   {
     Result: ResultScreen,
@@ -81,13 +63,24 @@ ResultStack.navigationOptions = {
   ),
 };
 
-// UserStack.path = '';
+const AccountStack= createStackNavigator(
+  {
+    Account: AccountScreen,
+  },
+  // config
+);
 
+AccountStack.navigationOptions = {
+  tabBarLabel: 'Account',
+  tabBarIcon: ({ focused }) => (
+    <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-link' : 'md-link'} />
+  ),
+};
 const tabNavigator = createBottomTabNavigator({
   PickStack: PickStack,
   UploadStack: UploadStack,
   ResultStack: ResultStack,
-  UserStack: UserStack,
+  AccountStack: AccountStack
 });
 
 // tabNavigator.path = '';

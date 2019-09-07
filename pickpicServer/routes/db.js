@@ -42,6 +42,8 @@ const EventSchema = new mongoose.Schema({
 var Event = mongoose.model('Event', EventSchema);
 var User = mongoose.model('User', mongoose.Schema({
     id: 'string',
+    password: 'string',
+    pushStatus : 'boolean'
 }));
 
 var Vote = mongoose.model('Vote', mongoose.Schema({
@@ -169,16 +171,45 @@ exports.fetchUsers = () => {
     return User.find();
 }
 
-exports.createUser = (id) => {
-    console.debug("db.js - createUser");
+exports.loginUser = (id,password) => {
+    console.debug("db.js - loginUser", id, password);
 
     return new Promise( (resolve, reject) => {
-        User.create({id:id}, (error, data)=> {
-            if (error) {
-                reject( 'UserAlreadyError' );
+        User.find({id:id, password:password}, (error, data)=> {
+            if( !data.length )
+            {
+                reject( 'NotExistedUser');
+            }
+            if( error ) {
+                reject( 'LoginUserError' + error );
             }
             resolve(data);
-        } );
+        });
+    })
+}
+exports.patchUser = (id, patchData) => {
+    console.log("db.js - patchUser");
+
+    return new Promise( ( resolve, reject ) => {
+        User.findOneAndUpdate({id}, patchData, (err, result)=> {
+            if( err ) reject( err );
+            console.log(result);
+            resolve( result );
+        });
+    });
+}
+exports.createUser = (id,password) => {
+    console.debug("db.js - createUser", id, password);
+
+    return new Promise( ( resolve, reject ) =>
+    {
+        User.findOne({id}, (err, result) => {
+            if( result ) reject('UserAlreadyError');
+
+            User.create({id, password, pushStatus:true }, (err, result) => {
+                resolve( result );
+            })
+        })
     });
 }
 

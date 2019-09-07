@@ -50,6 +50,10 @@ export default class Pick extends React.Component<Props, State>{
         const voteInfo = this.eventRoute + "/" + event.id + "/" + event.photos[activeIdx].id;
         var response = await fetch(voteInfo, {
             method: 'post',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
                 'voter': 'bakyuns'
             })

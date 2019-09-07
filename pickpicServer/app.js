@@ -7,8 +7,8 @@ var bodyParser = require('body-parser')
 var logger = require('morgan');
 
 var eventsRouter = require('./routes/events/index');
-
 var usersRouter = require('./routes/users/index');
+var loginRouter = require('./routes/login/index');
 var fileUploadRouter = require('./routes/upload_example');
 
 var app = express();
@@ -28,6 +28,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/users', usersRouter);
+app.use('/login', loginRouter);
 app.use('/events', eventsRouter);
 app.use('/upload', fileUploadRouter);
 app.use('/upload', express.static('upload'));
