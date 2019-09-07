@@ -2,6 +2,7 @@ import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
 import { Button, Dimensions, StyleSheet, View, Text, Platform } from 'react-native';
 import React, { createRef } from 'react'
 import moment from 'moment';
+import { NavigationEvents } from 'react-navigation';
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -101,7 +102,7 @@ export default class Pick extends React.Component<Props, State>{
         let photos = [];
         const title = responseJson.title;
         const expiredAt = new Date(responseJson.expiredAt);
-        
+
         for (let i = 0; i < responseJson.photos.length; i++) {
             const info = responseJson.photos[i];
             const photoId = info._id;
@@ -147,6 +148,9 @@ export default class Pick extends React.Component<Props, State>{
         }
         return (
             <View>
+                <NavigationEvents
+                    onWillFocus={this.fetchEvents}
+                />
                 <Text style={styles.title}>{event.title}</Text>
                 <Text style={styles.title}>Expired {moment(event.expiredAt).fromNow()}</Text>
                 <Carousel
@@ -161,15 +165,6 @@ export default class Pick extends React.Component<Props, State>{
                 <Button
                     title={'Pick'}
                     onPress={this.vote} />
-                <Button
-                    title={'Fetch'}
-                    onPress={this.fetchEvents} />
-                {/* <Button
-                    title={'Next'}
-                    onPress={this.snapToNext} />
-                <Button
-                    title={'Prev'}
-                    onPress={this.snapToPrev} /> */}
             </View>
         );
     }

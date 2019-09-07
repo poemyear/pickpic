@@ -1,10 +1,11 @@
 import { Button, Dimensions, StyleSheet, View, Image, Text, Platform, Switch } from 'react-native';
 import React from 'react'
 import SwitchButton from "../../../Component/SwitchButton.js"
+import { NavigationEvents } from 'react-navigation';
 
 const { width: screenWidth } = Dimensions.get('window')
 interface Props {
-    navigation: any 
+    navigation: any
 }
 
 interface State {
@@ -101,9 +102,9 @@ export default class CheckResult extends React.Component<Props, State>{
         return resultObj;
     }
 
-    async componentDidMount() {
-        console.log("componentDidMount Entrance");
+    fetchEvents = async () => {
         try {
+            console.log(this.state);
             if (this.state.tab === 0) {
                 let event = await this.checkingEventsOfMine();
                 this.setState(
@@ -120,8 +121,14 @@ export default class CheckResult extends React.Component<Props, State>{
         } catch (err) {
             console.error(err);
         }
+    }
+
+    async componentDidMount() {
+        console.log("componentDidMount Entrance");
+        this.fetchEvents();
         console.log("componentDidMount Exit");
     }
+
     async changedTab() {
         console.log("ChangedTab Entrance");
         console.log("tab : " + this.state.tab);
@@ -149,7 +156,18 @@ export default class CheckResult extends React.Component<Props, State>{
         this.props.navigation.navigate('Detail', this.state.events[idx]);
     }
 
+    componentWillReceiveProps() {
+        console.log('rerender here')
+        //this.yourFunction()
+        //this.setState({})
+    }
+
+
+    cnt = 0;
     render() {
+        console.log("Check Result Render", this.cnt);
+        this.cnt++;
+
         if (this.state.loading === 'init') {
             console.log("Setstate Not Finished")
             return <Text style={{ fontSize: 20 }}> Checking...</Text>
@@ -217,6 +235,12 @@ export default class CheckResult extends React.Component<Props, State>{
             console.log("---------------- tab : ", this.state.tab);
             return (
                 <View>
+                    <NavigationEvents
+                        onWillFocus={this.fetchEvents}
+                        // onDidFocus={payload => console.log('did focus')}
+                        // onWillBlur={payload => console.log('will blur')}
+                        // onDidBlur={payload => console.log('did blur')}
+                    />
                     <View style={{
                         alignItems: 'center', justifyContent: 'center',
                         padding: 20, borderBottomWidth: 0.5, borderColor: '#444', borderTopWidth: 0.5
