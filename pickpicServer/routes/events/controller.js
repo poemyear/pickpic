@@ -4,7 +4,8 @@ const db = require('../db');
 
 exports.index = (req, res) => {
     console.log("controller.js - index");
-    return db.fetchEvents(req.query.id)
+    return db.fetchEvents(req.headers.userid)
+
         .then((result)=> {
             res.send(result);
         }).catch((err) => {

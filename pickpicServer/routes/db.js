@@ -94,7 +94,13 @@ exports.createEvent = (owner, title, expiredAt, photos) => {
 exports.fetchEvents = async (id) => {
     console.log("db.js - fetchEvents");
 
-    return Event.find({"owner":{$ne:id},"voters":{$ne:id}, "photos.0": { "$exists": true }, "status":"voting"} ).sort({'createdAt': -1}).limit(10);
+    return Event.find({
+                        "owner": { $ne: id }, 
+                        "voters": { $ne: id }, 
+                        "photos.0": { "$exists": true }, 
+                        "status": "voting" })
+                .sort({ 'createdAt': -1 })
+                .limit(10);
 }
 
 exports.readEvent = (id) =>{
