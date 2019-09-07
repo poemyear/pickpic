@@ -1,13 +1,6 @@
-import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
 import { Button, Dimensions, StyleSheet, View, Image, Text, Platform, Switch } from 'react-native';
-import React, { useRef, createRef } from 'react'
-import SliderEntry from "../../Component/SliderEntry.js";
-import Upload from "../Upload";
-import { UserInterfaceIdiom } from 'expo-constants';
-import SwitchButton from "../../Component/SwitchButton.js"
-
-import Detail from '../ResultDetail/detail'
-
+import React from 'react'
+import SwitchButton from "../../../Component/SwitchButton.js"
 
 const { width: screenWidth } = Dimensions.get('window')
 interface Props {

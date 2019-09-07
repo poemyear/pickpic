@@ -1,5 +1,5 @@
 import { Button, Dimensions, StyleSheet, View, Text, Platform, ProgressViewIOSComponent } from 'react-native';
-import React, { createRef } from 'react'
+import React from 'react'
 import { BarChart, Grid, YAxis } from 'react-native-svg-charts'
 import { Defs, LinearGradient, Text as SvgText, Image as SvgImage, Stop } from "react-native-svg";
 import * as scale from 'd3-scale'
@@ -118,8 +118,6 @@ export default class Detail extends React.Component<Props, State>{
         )
         const srcData = this.state.data;
         return (
-            //일단 첫번째만 출력하도록 , 값이 들어와서 표출되는지만 확인
-            //어떤 화면으로 어떻게 표출할지는 논의 필요
             <View>
                 <View>
                     <Text> Title: {this.props.eventTitle} </Text>

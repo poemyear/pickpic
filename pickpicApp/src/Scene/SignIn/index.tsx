@@ -26,7 +26,7 @@ export default class SignIn extends React.Component<Props, State> {
     static navigationOptions = {
         header: null,
     };
-    constructor(props:props){
+    constructor(props:Props){
         super(props);
         AsyncStorage.getItem("account").then((value) => {
             if (value){
