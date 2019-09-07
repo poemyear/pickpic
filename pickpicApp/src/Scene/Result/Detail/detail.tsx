@@ -1,4 +1,4 @@
-import { Button, Dimensions, StyleSheet, View, Text, Platform, ProgressViewIOSComponent } from 'react-native';
+import { Button, Image, Dimensions, StyleSheet, View, Text, Platform, ProgressViewIOSComponent, ScrollView } from 'react-native';
 import React from 'react'
 import { BarChart, Grid, YAxis } from 'react-native-svg-charts'
 import { Defs, LinearGradient, Text as SvgText, Image as SvgImage, Stop } from "react-native-svg";
@@ -14,6 +14,7 @@ interface Props {
     eventStatus: string,
     eventCreatedAt: string,
     eventExpiredAt: string,
+    eventTotalVote: number,
     eventResult: {
         photoId: string,
         path: string,
@@ -28,6 +29,7 @@ interface State {
         photoId: string,
         path: string,
         count: number,
+        percent: string,
         key: string,
         svg: { fill: string },
         thumbnailPath: string
@@ -44,7 +46,8 @@ export default class Detail extends React.Component<Props, State>{
             return { fill: ('#' + (Math.random() * 0xFFFFFF << 0).toString(16) + '000000').slice(0, 7) };
         }
         let data = [];
-        this.props.eventResult.map(result => data.push({ ...result, svg: randomColor() }));
+        console.log(this.props.eventTotalVote);
+        this.props.eventResult.map(result => data.push({ ...result, svg: randomColor(), percent: (result.count * 100 / this.props.eventTotalVote).toPrecision(2) + "%" }));
         this.state = { data };
     }
 
@@ -58,10 +61,10 @@ export default class Detail extends React.Component<Props, State>{
             </Defs>
         )
 
-        const CUT_OFF = 5;
         const PieLabels = ({ slices }) => {
             return slices.map((slice, index) => {
                 const { labelCentroid, pieCentroid, data } = slice;
+                const imageSize = 30;
                 return (
                     <G key={index}>
                         <Line
@@ -69,7 +72,9 @@ export default class Detail extends React.Component<Props, State>{
                             y1={labelCentroid[1]}
                             x2={pieCentroid[0]}
                             y2={pieCentroid[1]}
+                            opacity="0.5"
                             stroke={data.svg.fill}
+                            strokeWidth={3}
                         />
                         {/* <Circle
                                 cx={ labelCentroid[ 0 ] }
@@ -78,56 +83,77 @@ export default class Detail extends React.Component<Props, State>{
                                 fill={ data.svg.fill }
                             /> */}
                         <SvgImage
-                            x={labelCentroid[0]}
-                            y={labelCentroid[1]}
-                            width={20}
-                            height={20}
+                            x={labelCentroid[0] - imageSize / 2}
+                            y={labelCentroid[1] - imageSize / 2}
+                            width={imageSize}
+                            height={imageSize}
                             preserveAspectRatio="xMidYMid slice"
                             opacity="1"
                             href={{ uri: "http://localhost:3000/" + data.thumbnailPath }}
                         />
+                        <SvgText
+                            key={index}
+                            x={pieCentroid[0]}
+                            y={pieCentroid[1]}
+                            fontSize={14}
+                            fill={'white'}
+                            textAnchor={'middle'}
+                            alignmentBaseline={'middle'}
+                            stroke={'black'}
+                            strokeWidth={0.02}
+                        >
+                            {data.percent}
+                        </SvgText>
                     </G>
                 )
             })
         }
 
-        const Labels = ({ x, y, bandwidth, data }) => (
+        const Thumanails = ({ x, y, bandwidth, data }) => (
             data.map((value, index) => (
-                // <SvgText
-                //     key={ index }
-                //     x={ value.count > 5 ? x(0) + 10 : x(value.count) + 10 }
-                //     y={ y(index) + (bandwidth / 2) }
-                //     fontSize={ 14 }
-                //     fill={ value.count > 5 ? 'white' : 'black' }
-                //     alignmentBaseline={ 'middle' }
-                // >
-                //     {value.count}
-                // </SvgText>
                 <SvgImage
                     key={this.props.eventId + index}
-                    x={value.count > 5 ? x(0) + 10 : x(value.count) + 10}
-                    y={y(index)}// + (bandwidth / 2)}
+                    x={x(value.count) + 10}
+                    y={y(index)}
                     width={bandwidth}
                     height={bandwidth}
-                    // preserveAspectRatio="xMidYMid slice"
                     preserveAspectRatio="none"
                     opacity="1"
-                    href={{ uri: "http://localhost:3000/" + value.thumbnailPath }}
+                    href={{ uri: this.serverAddress + "/" + value.thumbnailPath }}
                 />
             ))
         )
+        const Lables = ({ x, y, bandwidth, data }) => (
+            data.map((value, index) => (
+                <SvgText
+                    key={index}
+                    x={x(0) + 10}
+                    y={y(index) + (bandwidth / 2)}
+                    fontSize={14}
+                    fill={'white'}
+                    alignmentBaseline={'middle'}
+                >
+                    {value.count}
+                </SvgText>
+            ))
+        )
+
         const srcData = this.state.data;
+
+        this.props.eventResult.map
+        let barFlex = srcData.length;
+        let pieFlex = 5;
         return (
-            <View>
-                <View>
-                    <Text> Title: {this.props.eventTitle} </Text>
-                    <Text> Status: {this.props.eventStatus} </Text>
+            <View style={{ flex: 1 }}>
+                <View style={styles.eventInfoContainer}>
+                    <Text style={styles.title}>{this.props.eventTitle}</Text>
                     <Text> CreatedAt: {this.props.eventCreatedAt} </Text>
                     <Text> ExpiredAt: {this.props.eventExpiredAt} </Text>
                     <Text> Expired {moment(this.props.eventExpiredAt).fromNow()}</Text>
                 </View>
-                <View style={{ flexDirection: 'row', width: '90%', height: '60%', paddingVertical: 16 }}>
+                <View style={{ flex: barFlex, flexDirection: "row", }}>
                     <YAxis
+                        style={{ width: 10 }}
                         data={srcData}
                         yAccessor={({ index }) => index}
                         scale={scale.scaleBand}
@@ -137,26 +163,30 @@ export default class Detail extends React.Component<Props, State>{
                         formatLabel={(_, index) => srcData[index].key}
                     />
                     <BarChart
-                        style={{ flex: 1, marginLeft: 8 }}
+                        style={{ flex: 8, marginLeft: 10 }}
                         data={srcData}
                         horizontal={true}
                         yAccessor={({ item }) => item.count}
-                        contentInset={{ top: 10, bottom: 10 }}
+                        contentInset={{ right: 100 }}
                         spacing={0.2}
+                        animate={true}
+                        animationDuration={500}
                         gridMin={0}
                     >
                         {/* <Grid direction={Grid.Direction.VERTICAL}/> */}
-                        <Labels x={0} y={0} bandwidth={20} data={srcData} />
+                        <Thumanails bandwidth={20} data={srcData} />
+                        <Lables bandwidth={10} data={srcData} />
+
                     </BarChart>
                 </View>
-                <View>
+                <View style={{ flex: pieFlex }}>
                     <PieChart
-                        style={{ height: 200 }}
+                        style={{ flex: 1 }}
                         data={srcData}
                         valueAccessor={({ item }) => item.count}
-                        innerRadius={20}
-                        outerRadius={55}
-                        labelRadius={80}
+                        outerRadius={'75%'}
+                        innerRadius={'20%'}
+                        labelRadius={'90%'}
                     >
                         <PieLabels slices={srcData} />
                     </PieChart>
@@ -167,26 +197,16 @@ export default class Detail extends React.Component<Props, State>{
     }
 }
 
-
 const styles = StyleSheet.create({
-    item: {
-        width: screenWidth - 150,
-        height: screenWidth - 150,
+    eventInfoContainer: {
+        height: "15%",
     },
-    imageContainer: {
+    chartConatiner: {
         flex: 1,
-        marginBottom: Platform.select({ ios: 0, android: 1 }), // Prevent a random Android rendering issue
-        backgroundColor: 'white',
-        borderRadius: 8,
-    },
-    image: {
-        ...StyleSheet.absoluteFillObject,
-        resizeMode: 'cover',
     },
     title: {
         paddingHorizontal: 30,
         backgroundColor: 'transparent',
-        color: 'rgba(255, 255, 255, 0.9)',
         fontSize: 20,
         fontWeight: 'bold',
         textAlign: 'center'

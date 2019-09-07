@@ -22,6 +22,7 @@ export default class CheckResult extends React.Component<Props, State>{
                 eventId={navigation.getParam('eventId', 'unknown')}
                 eventCreatedAt={navigation.getParam('createdAt', 'unknown')}
                 eventExpiredAt={navigation.getParam('expiredAt', 'unknown')}
+                eventTotalVote={navigation.getParam('totalVote', 'unknown')}
                 eventResult={navigation.getParam('result', 'unknown')}
                 eventStatus={navigation.getParam('status', 'unknown')}
             />

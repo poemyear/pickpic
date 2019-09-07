@@ -16,6 +16,7 @@ interface State {
         status: string,
         createdAt: string,
         expiredAt: string,
+        totalVote: number,
         result: {
             photoId: string,
             path: string,
@@ -82,14 +83,18 @@ export default class CheckResult extends React.Component<Props, State>{
         let eventInfo = this.eventRoute + "/" + eventId + "/status";
         let responseJson = await (await fetch(eventInfo)).json();
         let resultInfo = [];
+        let sum = 0;
         for (const [i, result] of responseJson.result.entries()) {
+            const dummyCount = result.count + Math.floor(Math.random() * 1000) + 3;
             resultInfo.push({
                 photoId: result._id,
                 path: result.path,
-                count: result.count + Math.random() % 20,
+                // count: result.count
+                count: dummyCount,
                 thumbnailPath: result.thumbnailPath,
                 key: i
             });
+            sum += dummyCount;
         }
         let resultObj = {
             eventId: eventId,
@@ -97,6 +102,7 @@ export default class CheckResult extends React.Component<Props, State>{
             status: responseJson.status,
             createdAt: responseJson.createdAt,
             expiredAt: responseJson.expiredAt,
+            totalVote: sum,
             result: resultInfo
         };
         return resultObj;
