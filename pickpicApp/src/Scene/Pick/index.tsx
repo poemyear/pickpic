@@ -27,6 +27,8 @@ export default class Pick extends React.Component<Props, State>{
     carouselRef = createRef<Carousel>();
     serverAddress = "http://localhost:3000";
     eventRoute = this.serverAddress + "/events";
+    // userId = "bakyuns";
+    userId = "randomId-" + Math.floor(Math.random() * 10);  // TODO: use signed in user's _id  
 
     constructor(props: Props) {
         super(props);
@@ -50,13 +52,13 @@ export default class Pick extends React.Component<Props, State>{
         const event = this.state.events[this.state.eventIdx];
         const voteInfo = this.eventRoute + "/" + event.id + "/" + event.photos[activeIdx].id;
         var response = await fetch(voteInfo, {
-            method: 'post',
+            method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                'voter': 'bakyuns'
+                'voter': this.userId
             })
         });
 
@@ -83,7 +85,16 @@ export default class Pick extends React.Component<Props, State>{
 
     fetchEvents = async () => {
         console.debug("fetch Events");
-        let responseJson = await (await fetch(this.eventRoute)).json();
+        let response = await fetch(this.eventRoute, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                "Content-Type": "application/json",
+                "userid": this.userId
+              }});
+        if (!response.ok)
+              console.error("Request Failed");
+        let responseJson = await response.json();
         let events = [];
         for (let event of responseJson) {
             events.push(await this.parseEvent(event._id));
@@ -151,6 +162,7 @@ export default class Pick extends React.Component<Props, State>{
                 <NavigationEvents
                     onWillFocus={this.fetchEvents}
                 />
+                <Text style={styles.title}>Current UserId: {this.userId}</Text>
                 <Text style={styles.title}>{event.title}</Text>
                 <Text style={styles.title}>Expired {moment(event.expiredAt).fromNow()}</Text>
                 <Carousel
