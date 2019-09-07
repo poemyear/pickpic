@@ -6,6 +6,7 @@ import TabBarIcon from '../Component/TabBarIcon';
 import PickScreen from '../Scene/Pick';
 import UploadScreen from '../Scene/Upload';
 import ResultScreen from '../Scene/CheckResult';
+import DetailScreen from '../Scene/ResultDetail';
 import AccountScreen from '../Scene/Account';
 
 const config = Platform.select({
@@ -52,6 +53,7 @@ UploadStack.navigationOptions = {
 const ResultStack = createStackNavigator(
   {
     Result: ResultScreen,
+    Detail: DetailScreen,
   },
   // config
 );

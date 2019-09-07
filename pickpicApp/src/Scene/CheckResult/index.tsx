@@ -11,13 +11,13 @@ import Detail from '../ResultDetail/detail'
 
 const { width: screenWidth } = Dimensions.get('window')
 interface Props {
-
+    navigation: any 
 }
 
 interface State {
-    user_Id: string,
+    userId: string,
     events: {
-        event_Id: string,
+        eventId: string,
         title: string,
         status: string,
         createdAt: string,
@@ -33,8 +33,6 @@ interface State {
     }[]
     loading: string,
     tab: number,    // 0 : 내꺼 , 1 : 남꺼
-    isDetail: boolean,
-    detailIdx: number,
 }
 
 
@@ -45,13 +43,11 @@ export default class CheckResult extends React.Component<Props, State>{
     constructor(props: Props) {
         super(props);
         this.state = {
-            user_Id: "",
+            userId: "",
             events: [],
             loading: "init",
             tab: 0,
-            isDetail: false,
-            detailIdx: -1,
-            /*event_Id: 0,
+            /*eventId: 0,
             status: [],
             loading : "init",
             tab : 0*/
@@ -69,7 +65,7 @@ export default class CheckResult extends React.Component<Props, State>{
         for (let event of responseJson) {
             eventsSet.push(await this.plotEvent(event._id));
         }
-        let resultObj = { user_Id: userId, events: eventsSet, loading: "finish", tab: 0 };
+        let resultObj = { userId: userId, events: eventsSet, loading: "finish", tab: 0 };
         return resultObj;
     }
 
@@ -84,7 +80,7 @@ export default class CheckResult extends React.Component<Props, State>{
         for (let event of responseJson) {
             eventsSet.push(await this.plotEvent(event._id));
         }
-        let resultObj = { user_Id: userId, events: eventsSet, loading: "finish", tab: 1 };
+        let resultObj = { userId: userId, events: eventsSet, loading: "finish", tab: 1 };
         return resultObj;
     }
 
@@ -102,7 +98,7 @@ export default class CheckResult extends React.Component<Props, State>{
             });
         }
         let resultObj = {
-            event_Id: eventId,
+            eventId: eventId,
             title: responseJson.title,
             status: responseJson.status,
             createdAt: responseJson.createdAt,
@@ -156,31 +152,8 @@ export default class CheckResult extends React.Component<Props, State>{
         console.log("ChangedTab Exit");
     }
 
-    exitFromDetail = () => {
-        this.setState({
-            isDetail: false,
-            detailIdx: -1
-        })
-    }
-    changeToDetail = (idx: number) => {
-        this.setState({
-            isDetail: true,
-            detailIdx: idx
-        })
-    }
-    get renderDetail() {
-        const detailEvent = this.state.events[this.state.detailIdx];
-        console.log(detailEvent);
-        return (
-            <Detail
-                eventTitle={detailEvent.title}
-                eventId={detailEvent.event_Id}
-                eventCreatedAt={detailEvent.createdAt}
-                eventExpiredAt={detailEvent.expiredAt}
-                eventResult={detailEvent.result}
-                eventStatus={detailEvent.status}
-            />
-        )
+    navigateToDetail = (idx: number) => {
+        this.props.navigation.navigate('Detail', this.state.events[idx]);
     }
 
     render() {
@@ -189,18 +162,7 @@ export default class CheckResult extends React.Component<Props, State>{
             return <Text style={{ fontSize: 20 }}> Checking...</Text>
         }
 
-        if (this.state.loading === 'finish' && this.state.isDetail == true) {
-            return (<View style={{ flex: 1 }}>
-                <View>
-                    <Button title="Exit" onPress={() => this.exitFromDetail()} />
-                </View>
-                <View></View>
-                <View>{this.renderDetail}</View>
-            </View>);
-
-        }
-
-        if (this.state.loading === 'finish' && this.state.isDetail == false) {
+        if (this.state.loading === 'finish') {
             console.log("Setstate Finished");
 
             var sortedEvents = [];
@@ -209,7 +171,7 @@ export default class CheckResult extends React.Component<Props, State>{
                 var sortStatusByCount = oriStatus.sort(function (a, b) {
                     return b.count - a.count;
                 });
-                sortedEvents.push({ event_Id: event.event_Id, title: event.title, status: sortStatusByCount });
+                sortedEvents.push({ eventId: event.eventId, title: event.title, status: sortStatusByCount });
             }
 
             var data_all = [];
@@ -235,7 +197,7 @@ export default class CheckResult extends React.Component<Props, State>{
                 }
                 data_all.push(data);
                 showStructure.push(
-                    <View key={event.event_Id}>
+                    <View key={event.eventId}>
                         <View>
                             <Text style={{ fontSize: 20 }}>{event.title} </Text>
                         </View>
@@ -249,7 +211,7 @@ export default class CheckResult extends React.Component<Props, State>{
                             </View>
 
                             <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                                <Button title="..." onPress={() => this.changeToDetail(i)} />
+                                <Button title="..." onPress={() => this.navigateToDetail(i)} />
                             </View>
                         </View>
                     </View>

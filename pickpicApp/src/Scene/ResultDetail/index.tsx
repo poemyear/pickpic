@@ -1,21 +1,15 @@
-import { Button, Dimensions, StyleSheet, View, Text, Platform } from 'react-native';
-import React, { createRef } from 'react'
-import { BarChart, Grid, YAxis } from 'react-native-svg-charts'
-import { Defs, LinearGradient, Text as SvgText, Image as SvgImage, Stop } from "react-native-svg";
-import * as scale from 'd3-scale'
-import { PieChart } from 'react-native-svg-charts'
-import { Circle, G, Line } from 'react-native-svg'
+import {  Dimensions, StyleSheet, View, Platform } from 'react-native';
+import React  from 'react'
 import Detail from './detail'
 
 const { width: screenWidth } = Dimensions.get('window')
 interface Props {
+    navigation: any 
 }
 interface State {
 }
 
 export default class CheckResult extends React.Component<Props, State>{
-    serverAddress = "http://localhost:3000";
-    eventRoute = this.serverAddress + "/events"; 
     randomColor = () => ('#' + (Math.random() * 0xFFFFFF << 0).toString(16) + '000000').slice(0, 7)
     sample = {
         _id: "5d6a9ed947c678756e46ddf5",
@@ -60,15 +54,16 @@ export default class CheckResult extends React.Component<Props, State>{
     }
 
     render() {
+        const { navigation } = this.props;
         return (
             <View>
                 <Detail 
-                    eventTitle = {this.sample.title}
-                    eventId = {this.sample._id}
-                    eventCreatedAt = {this.sample.createdAt}
-                    eventExpiredAt = {this.sample.expiredAt}
-                    eventResult = {this.sample.result}
-                    eventStatus = {this.sample.status}
+                    eventTitle = {navigation.getParam('title', 'unknown')}
+                    eventId = {navigation.getParam('eventId', 'unknown')}
+                    eventCreatedAt = {navigation.getParam('createdAt', 'unknown')}
+                    eventExpiredAt = {navigation.getParam('expiredAt', 'unknown')}
+                    eventResult = {navigation.getParam('result', 'unknown')}
+                    eventStatus = {navigation.getParam('status', 'unknown')}
                 />
             </View>
         );
