@@ -7,7 +7,7 @@ var expirePhotoHandler = new Agenda({db: { address: 'mongodb://localhost:27017/e
 
 expirePhotoHandler.define('changeStatus', async function(job, done){
     console.log('changeStatus');
-    events = await Event.find({status: 'voting', expireAt:{$lt:Date.now()}});
+    events = await Event.find({status: 'voting', expiredAt:{$lt:Date.now()}});
     for(let event of events){
         event.status="expired";
         event.save(function(err){
@@ -28,12 +28,14 @@ const EventSchema = new mongoose.Schema({
     title : 'string',
     owner : 'string',
     createdAt: Date,
-    expireAt: Date,
+    expiredAt: Date,
     status: 'string',
     voters: [],
     photos : [mongoose.Schema({
         path : 'string',
-        filename : 'string'
+        filename : 'string',
+        thumbnail: 'string',
+        thumbnailPath: 'string'
     })]
 });
 
@@ -65,14 +67,14 @@ exports.connect = () => {
     });
 }
 
-exports.createEvent = (owner, title, photos) => {
+exports.createEvent = (owner, title, expiredAt, photos) => {
     console.log("db.js - createEvent");
 
     var newEvent = new Event({
         title: title,
         owner: owner,
         createdAt: Date.now(),
-        expireAt: moment().add(3600*24*2, 'second'),
+        expiredAt: moment(expiredAt),
         status: 'voting',
         voters: [],
         photos: photos
@@ -93,7 +95,13 @@ exports.createEvent = (owner, title, photos) => {
 exports.fetchEvents = async (id) => {
     console.log("db.js - fetchEvents");
 
-    return Event.find({"owner":{$ne:id},"voters":{$ne:id}, "photos.0": { "$exists": true }, "status":"voting"} ).sort({'createdAt': -1}).limit(10);
+    return Event.find({
+                        "owner": { $ne: id }, 
+                        "voters": { $ne: id }, 
+                        "photos.0": { "$exists": true }, 
+                        "status": "voting" })
+                .sort({ 'createdAt': -1 })
+                .limit(10);
 }
 
 exports.readEvent = (id) =>{

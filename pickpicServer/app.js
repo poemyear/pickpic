@@ -32,6 +32,7 @@ app.use('/login', loginRouter);
 app.use('/events', eventsRouter);
 app.use('/upload', fileUploadRouter);
 app.use('/upload', express.static('upload'));
+app.use('/thumbnail', express.static('thumbnail')); // enable to access files via http://{server}/thumbnail
 
 // For POST
 app.use(bodyParser.json());

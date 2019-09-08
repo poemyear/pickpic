@@ -5,7 +5,8 @@ import { createStackNavigator, createBottomTabNavigator } from 'react-navigation
 import TabBarIcon from '../Component/TabBarIcon';
 import PickScreen from '../Scene/Pick';
 import UploadScreen from '../Scene/Upload';
-import ResultScreen from '../Scene/CheckResult';
+import ResultScreen from '../Scene/Result/Check';
+import DetailScreen from '../Scene/Result/Detail';
 import AccountScreen from '../Scene/Account';
 
 const config = Platform.select({
@@ -52,6 +53,7 @@ UploadStack.navigationOptions = {
 const ResultStack = createStackNavigator(
   {
     Result: ResultScreen,
+    Detail: DetailScreen,
   },
   // config
 );

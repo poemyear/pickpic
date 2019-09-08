@@ -1,7 +1,8 @@
 import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
-import { Button, Dimensions, StyleSheet, View, Text, Platform } from 'react-native';
-import React, { useRef, createRef } from 'react'
-
+import { Button, Dimensions, StyleSheet, Image, View, Text, Platform, Animated } from 'react-native';
+import React, { createRef } from 'react'
+import moment from 'moment';
+import { NavigationEvents } from 'react-navigation';
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -13,11 +14,13 @@ interface State {
     events: {
         id: string,
         title: string,
+        expiredAt: Date,
         photos: {
             id: string,
             uri: string
         }[];
-    }[];
+    }[],
+    like:boolean,
 }
 
 
@@ -25,12 +28,15 @@ export default class Pick extends React.Component<Props, State>{
     carouselRef = createRef<Carousel>();
     serverAddress = "http://localhost:3000";
     eventRoute = this.serverAddress + "/events";
+    // userId = "bakyuns";
+    userId = "randomId-" + Math.floor(Math.random() * 10);  // TODO: use signed in user's _id  
 
     constructor(props: Props) {
         super(props);
         this.state = {
             eventIdx: -1,
-            events: []
+            events: [],
+            like:false,
         }
         console.debug('Pick constructor');
     }
@@ -48,13 +54,13 @@ export default class Pick extends React.Component<Props, State>{
         const event = this.state.events[this.state.eventIdx];
         const voteInfo = this.eventRoute + "/" + event.id + "/" + event.photos[activeIdx].id;
         var response = await fetch(voteInfo, {
-            method: 'post',
+            method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                'voter': 'bakyuns'
+                'voter': this.userId
             })
         });
 
@@ -67,11 +73,13 @@ export default class Pick extends React.Component<Props, State>{
                 const events = await this.fetchEvents();
                 this.setState({
                     eventIdx: events.length > 0 ? 0 : -1,
-                    events: events
+                    events: events,
+                    like:false,
                 });
             } else {
                 this.setState({
-                    eventIdx: this.state.eventIdx + 1
+                    eventIdx: this.state.eventIdx + 1,
+                    like:false,
                 })
             }
         } catch (err) {
@@ -81,13 +89,20 @@ export default class Pick extends React.Component<Props, State>{
 
     fetchEvents = async () => {
         console.debug("fetch Events");
-        let responseJson = await (await fetch(this.eventRoute)).json();
+        let response = await fetch(this.eventRoute, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                "Content-Type": "application/json",
+                "userid": this.userId
+            }
+        });
+        if (!response.ok)
+            console.error("Request Failed");
+        let responseJson = await response.json();
         let events = [];
         for (let event of responseJson) {
             events.push(await this.parseEvent(event._id));
-        }
-        if (events.length == 0) {
-            alert("새로운 투표가 없습니다.")
         }
         return events;
     }
@@ -98,13 +113,16 @@ export default class Pick extends React.Component<Props, State>{
         console.debug(eventId);
 
         let photos = [];
+        const title = responseJson.title;
+        const expiredAt = new Date(responseJson.expiredAt);
+
         for (let i = 0; i < responseJson.photos.length; i++) {
             const info = responseJson.photos[i];
             const photoId = info._id;
             const uri = this.serverAddress + "/" + info.path;
             photos.push({ id: photoId, uri });
         }
-        return { id: eventId, title: responseJson.title, photos };
+        return { id: eventId, title, expiredAt, photos };
     }
 
     async componentDidMount() {
@@ -136,14 +154,53 @@ export default class Pick extends React.Component<Props, State>{
         );
     }
 
+    heartOpacity = new Animated.Value(0);
+
+    likeAndVote = () => {
+        if (!this.state.like) {
+            this.setState(()=> {
+                Animated.sequence([
+                    Animated.spring(this.heartOpacity, { toValue: 1, useNativeDriver: true, tension: 50, delay:0 }),
+                    Animated.spring(this.heartOpacity, { toValue: 0, useNativeDriver: true, tension: 100, delay:0 }),
+                ]).start(this.vote);
+                return {like:true};
+            });
+        }
+    }
+
+    get renderOverlayHeart() {
+        return (
+            <View style={styles.overlay}>
+                <Animated.Image
+                    source={require('../../Component/heart.png')}
+                    style={[
+                        styles.overlayHeart, 
+                        {
+                            opacity: this.heartOpacity,
+                            transform: [{
+                                    scale: this.heartOpacity.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: [0.5, 1],
+                                    }),
+                                },],
+                        },]}
+                />
+            </View>
+        );
+    }
     render() {
-        let event = {id: '', title:'', photos:[]};
+        let event = { id: '', title: '', photos: [], expiredAt: null };
         if (this.state.eventIdx >= 0) {
             event = this.state.events[this.state.eventIdx];
         }
         return (
             <View>
+                <NavigationEvents
+                    onWillFocus={()=>this.fetchEvents}
+                />
+                <Text style={styles.title}>Current UserId: {this.userId}</Text>
                 <Text style={styles.title}>{event.title}</Text>
+                <Text style={styles.title}>Expired {moment(event.expiredAt).fromNow()}</Text>
                 <Carousel
                     ref={this.carouselRef}
                     sliderWidth={screenWidth}
@@ -153,18 +210,10 @@ export default class Pick extends React.Component<Props, State>{
                     renderItem={this._renderItem}
                     hasParallaxImages={true}
                 />
+                {this.renderOverlayHeart}
                 <Button
                     title={'Pick'}
-                    onPress={this.vote} />
-                <Button
-                    title={'Fetch'}
-                    onPress={this.fetchEvents} />
-                {/* <Button
-                    title={'Next'}
-                    onPress={this.snapToNext} />
-                <Button
-                    title={'Prev'}
-                    onPress={this.snapToPrev} /> */}
+                    onPress={this.likeAndVote} />
             </View>
         );
     }
@@ -193,38 +242,16 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlign: 'center'
     },
+    overlay: {
+        position: 'absolute',
+        alignItems: 'center',
+        justifyContent: 'center',
+        left: screenWidth/2,
+        right: screenWidth/2,
+        top: screenWidth/2,
+        bottom: screenWidth/2,
+    },
+    overlayHeart: {
+        tintColor: '#fff',
+    },
 })
-/*import react from 'react';
-import { stylesheet, text, view } from 'react-native';
-import { button, toast } from '@ant-design/react-native';
-import { slider } from '@ant-design/react-native';
-
-interface props {
-    value: string;
-}
-
-interface states {
-
-}
-
-export default class home extends react.component<props, states> {
-    constructor(props: props) {
-        super(props);
-    }
-
-    render() {
-        const {value}=this.props;
-        return (<view>
-            <text>{value}</text>
-            <text>{value}</text>
-            <text>{value}</text>
-            <text>{value}</text>
-            <text>{value}</text>
-            <slider defaultvalue={0.5} />
-            <button onpress={() => toast.info('toast test')}>
-                start
-            </button>
-            <text>{value}</text>
-        </view>);
-    }
-}*/

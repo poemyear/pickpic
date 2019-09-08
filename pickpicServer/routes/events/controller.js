@@ -4,7 +4,8 @@ const db = require('../db');
 
 exports.index = (req, res) => {
     console.log("controller.js - index");
-    return db.fetchEvents(req.query.id)
+    return db.fetchEvents(req.headers.userid)
+
         .then((result)=> {
             res.send(result);
         }).catch((err) => {
@@ -35,11 +36,15 @@ exports.create = (req, res) => {
     console.log("controller.js - create");
     const owner = req.body.owner;
     const title = req.body.title;
+    const expiredAt = req.body.expiredAt;
     if (!owner || !owner.length) {
         return res.status(400).json({ error: 'Invalid id' });
     }
     if (!title || !title.length) {
         return res.status(400).json({ error: 'Invalid Title' });
+    }
+    if (!expiredAt || !expiredAt.length) {
+        return res.status(400).json({ error: 'Invalid expiredAt' });
     }
 
     if (req.files.length < 2) {
@@ -47,7 +52,7 @@ exports.create = (req, res) => {
         return res.status(400).json({ error: 'Upload at least 2 photos' })
     }
 
-    db.createEvent(owner, title, req.files)
+    db.createEvent(owner, title, expiredAt, req.files)
         .then((result) => {
             console.debug(req.headers);
             console.debug(req.body);
@@ -75,9 +80,9 @@ exports.status = (req, res) => {
                             break;
                         }
                     }
-                    return { _id: photo._id, path: photo.path, count };
+                    return { _id: photo._id, path: photo.path, count, thumbnailPath: photo.thumbnailPath };
                 });
-                res.status(200).json({ status: ret });
+                res.status(200).json({ title: result.title, status: result.status, createdAt:result.createdAt, expiredAt:result.expiredAt, result: ret});
             }).catch((err) => {
                 console
                     .error(err); res.status(400);
