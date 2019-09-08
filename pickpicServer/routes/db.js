@@ -43,7 +43,8 @@ var Event = mongoose.model('Event', EventSchema);
 var User = mongoose.model('User', mongoose.Schema({
     id: 'string',
     password: 'string',
-    pushStatus : 'boolean'
+    pushStatus : 'boolean',
+    point : Number
 }));
 
 var Vote = mongoose.model('Vote', mongoose.Schema({
@@ -171,6 +172,25 @@ exports.createVote = async (voter, eventId, photoId) => {
 
 /* Users */
 
+exports.getUser = (id, params) => {
+    if( param.indexOf('password') != -1 )
+        return Promise.reject('Don\'t ask password' );
+    var column = {};
+    for(let param of params) {
+        column[param]=1;
+    }
+
+    return new Promise( (resolve, reject) => {
+        User.findOne({id}, column, (err, result) => {
+            if( result )
+                resolve( result );
+            else
+                reject( 'NotExistedUser' );
+            }
+        );
+    } );
+}
+
 exports.fetchUsers = () => {
     console.debug("db.js - fetchUsers");
 
@@ -212,7 +232,7 @@ exports.createUser = (id,password) => {
         User.findOne({id}, (err, result) => {
             if( result ) reject('UserAlreadyError');
 
-            User.create({id, password, pushStatus:true }, (err, result) => {
+            User.create({id, password, pushStatus:true, point:0 }, (err, result) => {
                 resolve( result );
             })
         })
