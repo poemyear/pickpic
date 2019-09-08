@@ -25,7 +25,7 @@ export default class SignIn extends React.Component<Props, State> {
         point: 0,
         pushStatus: true 
     };
-    pointHandler:number;
+    pointHandler:NodeJS.Timeout;
     serverAddress = "http://localhost:3000";
     getUserAddress = this.serverAddress + "/users";
     userPatchAddress = this.serverAddress + "/users";
@@ -70,8 +70,7 @@ export default class SignIn extends React.Component<Props, State> {
         {
             await this.getPoint();
         }
-    }
-    
+    }    
     
     componentDidMount() {
         this.pointHandler = setInterval(

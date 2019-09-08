@@ -52,7 +52,7 @@ export default class SignIn extends React.Component<Props, State> {
         else { 
             console.log(this.props.navigation);
 
-            setAccount = async (email) => {
+            const setAccount = async (email) => {
                 var result = await AsyncStorage.setItem('account', JSON.stringify({'email':email}));
                 console.log('save account');
             }
