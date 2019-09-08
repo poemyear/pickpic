@@ -8,22 +8,26 @@ import {
 import { createStackNavigator, createSwitchNavigator, createAppContainer } from 'react-navigation';
 import ToggleSwitch from 'toggle-switch-react-native'
 import SignUp from './../Signup'
+import { getPlatformOrientationLockAsync } from 'expo/build/ScreenOrientation/ScreenOrientation';
 
 interface Props {
     navigation: any
 }
 interface State {
     email: string,
+    point: Number,
     pushStatus: boolean
 }
 
 export default class SignIn extends React.Component<Props, State> {
-    state = {
+    state:State = {
         email: '',
-        password: '',
+        point: 0,
         pushStatus: true 
     };
+    pointHandler:number;
     serverAddress = "http://localhost:3000";
+    getUserAddress = this.serverAddress + "/users";
     userPatchAddress = this.serverAddress + "/users";
 
     static navigationOptions = {
@@ -38,10 +42,52 @@ export default class SignIn extends React.Component<Props, State> {
                 this.setState({email:JSON.parse(account).email})
             }    
         })
+
+        let point = this.getPoint(); 
+        var result = AsyncStorage.setItem('point', JSON.stringify({'point':point}));
     }
+
+    async getPoint(){
+        //var pointResp:IgetPointResponse<Number>;
+        var pointResp = await(await fetch(this.getUserAddress+ '/' + this.state.email + '?param=point', {
+            method: 'get',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })).json();
+        if( pointResp.hasOwnProperty('point') ) {
+            return pointResp.point;
+        }
+        else {
+            return 0; 
+        }
+    }
+
+    pointOnChange = async () => {
+        var point = await AsyncStorage.getItem("point");
+        if( point && JSON.parse(point).point != this.state.point ) 
+        {
+            await this.getPoint();
+        }
+    }
+    
+    
+    componentDidMount() {
+        this.pointHandler = setInterval(
+            this.pointOnChange,
+            10000
+        );
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.pointHandler);
+    }
+    
     logout = async () => {
         console.log('logout');
         AsyncStorage.removeItem("account");
+        AsyncStorage.removeItem("point");
         this.props.navigation.navigate('SingIn');
         
     }
@@ -65,6 +111,7 @@ export default class SignIn extends React.Component<Props, State> {
         return (
             <View style={styles.container}>
                 <Text style={styles.ID}>ID: {this.state.email}</Text>
+                <Text style={styles.ID}>ID: {this.state.point}</Text>
                 <TouchableOpacity
                     style={styles.button}
                     onPress={this.logout}

@@ -37,7 +37,7 @@ exports.show = (req, res) => {
     // if (!id) {
     //     return res.status(400).json({error: 'Invalid id'});
     // }
-    db.fetc(req.params.id)
+    db.getUser(req.params.id, req.query.param.split(','))
         .then((result)=> {
             res.send(result);
         }).catch((err) => {
