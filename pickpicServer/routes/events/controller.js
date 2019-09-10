@@ -91,6 +91,37 @@ exports.status = (req, res) => {
     )
 };
 
+exports.showMyEvents = (req, res) => {
+    console.log("controller.js - showMyEvents");
+    // const id = parseInt(req.params.id, 10);
+    // if (!id) {
+    //     return res.status(400).json({error: 'Invalid id'});
+    // }
+    db.fetchMyEvents(req.params.userId)
+        .then((result) => {
+            res.send(result);
+        }).catch((err) => {
+        console.error(err);
+        res.status(400).json({ error: 'Invalid id' });
+    });
+};
+
+exports.showMyPicks = (req, res) => {
+    console.log("controller.js - showMyPicks");
+    // const id = parseInt(req.params.id, 10);
+    // if (!id) {
+    //     return res.status(400).json({error: 'Invalid id'});
+    // }
+    db.fetchMyPicks(req.params.userId)
+        .then((result) => {
+            res.send(result);
+        }).catch((err) => {
+        console.error(err);
+        res.status(400).json({ error: 'Invalid id' });
+    });
+};
+
+
 exports.vote = (req, res) => {
     console.log("controller.js - pick");
     const voter = req.body.voter;

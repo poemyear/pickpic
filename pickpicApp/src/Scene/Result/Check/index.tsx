@@ -1,4 +1,4 @@
-import { Button, Dimensions, StyleSheet, View, Image, Text, Platform, Switch } from 'react-native';
+import { Button, Dimensions, StyleSheet, View, Image, Text, Platform, Switch, ScrollView } from 'react-native';
 import React from 'react'
 import SwitchButton from "../../../Component/SwitchButton.js"
 import { NavigationEvents } from 'react-navigation';
@@ -50,9 +50,9 @@ export default class CheckResult extends React.Component<Props, State>{
     }
 
     checkingEventsOfMine = async () => {
-        const userId = "5d60e920ca22b86af6f07c68";
-        //const checkingMyResult = this.eventRoute + "eventsbyowner/" + userId;
-        const checkingMyResult = this.eventRoute;
+        const userId = "bakyuns";
+        const checkingMyResult = this.eventRoute + "/myEvents/" + userId;
+        //const checkingMyResult = this.eventRoute;
 
         let responseJson = await (await fetch(checkingMyResult)).json();
         let eventsSet = [];
@@ -65,9 +65,9 @@ export default class CheckResult extends React.Component<Props, State>{
     }
 
     checkingEventsbyMe = async () => {
-        const userId = "5d60e920ca22b86af6f07c68";
-        //const checkingOtherResult = this.eventRoute + "eventsbyvoter/" + userId;
-        const checkingOtherResult = this.eventRoute;
+        const userId = "bakyuns";
+        const checkingOtherResult = this.eventRoute + "/myPicks/" + userId;
+        //const checkingOtherResult = this.eventRoute;
 
         let responseJson = await (await fetch(checkingOtherResult)).json();
         let eventsSet = [];
@@ -240,9 +240,10 @@ export default class CheckResult extends React.Component<Props, State>{
 
             console.log("---------------- tab : ", this.state.tab);
             return (
+                <ScrollView>
                 <View>
                     <NavigationEvents
-                        onWillFocus={this.fetchEvents}
+                        //onWillFocus={this.fetchEvents}
                         // onDidFocus={payload => console.log('did focus')}
                         // onWillBlur={payload => console.log('will blur')}
                         // onDidBlur={payload => console.log('did blur')}
@@ -253,8 +254,8 @@ export default class CheckResult extends React.Component<Props, State>{
                     }}>
                         <SwitchButton
                             onValueChange={(val) => { this.setState({ tab: val }, this.changedTab) }}      // this is necessary for this component
-                            text1='My Pick'                        // optional: first text in switch button --- default ON
-                            text2='Your Pick'                       // optional: second text in switch button --- default OFF
+                            text1='My Events'                        // optional: first text in switch button --- default ON
+                            text2='My Picks'                       // optional: second text in switch button --- default OFF
                             switchWidth={250}                 // optional: switch width --- default 44
                             switchHeight={44}                 // optional: switch height --- default 100
                             switchdirection='ltr'             // optional: switch button direction ( ltr and rtl ) --- default ltr
@@ -270,6 +271,7 @@ export default class CheckResult extends React.Component<Props, State>{
                     </View>
                     {showStructure}
                 </View>
+                </ScrollView>
 
             );
 
