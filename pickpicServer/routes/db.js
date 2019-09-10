@@ -173,7 +173,7 @@ exports.createVote = async (voter, eventId, photoId) => {
 /* Users */
 
 exports.getUser = (id, params) => {
-    if( param.indexOf('password') != -1 )
+    if( params.indexOf('password') != -1 )
         return Promise.reject('Don\'t ask password' );
     var column = {};
     for(let param of params) {
