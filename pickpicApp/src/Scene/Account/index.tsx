@@ -71,7 +71,8 @@ export default class Account extends React.Component<Props, State> {
         {
             try {
                 const curPoint = await this.getPoint(); 
-                AsyncStorage.setItem("point", await this.getPoint());
+                console.log(curPoint);
+                AsyncStorage.setItem("point", curPoint);
             }
             catch(err){
                 console.error(err); 
