@@ -5,6 +5,7 @@ import {
     AsyncStorage,
     StatusBar,
 } from 'react-native';
+
 import { createStackNavigator, createSwitchNavigator, createAppContainer } from 'react-navigation';
 import ToggleSwitch from 'toggle-switch-react-native'
 import SignUp from './../Signup'
@@ -19,7 +20,7 @@ interface State {
     pushStatus: boolean
 }
 
-export default class SignIn extends React.Component<Props, State> {
+export default class Account extends React.Component<Props, State> {
     state:State = {
         email: '',
         point: 0,
@@ -68,10 +69,15 @@ export default class SignIn extends React.Component<Props, State> {
         var point = await AsyncStorage.getItem("point");
         if( point && JSON.parse(point).point != this.state.point ) 
         {
-            await this.getPoint();
+            try {
+                const curPoint = await this.getPoint(); 
+                AsyncStorage.setItem("point", await this.getPoint());
+            }
+            catch(err){
+                console.error(err); 
+            }
         }
-    }
-    
+    }    
     
     componentDidMount() {
         this.pointHandler = setInterval(

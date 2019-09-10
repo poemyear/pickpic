@@ -1,22 +1,26 @@
 import React from 'react';
-import { Button, Image, StyleSheet, Text, View } from 'react-native';
-import { AppLoading } from "expo";
+import { Platform } from "react-native";
+import { Button, Image, StyleSheet, Text, View, PermissionsAndroid } from 'react-native';
+import { AppLoading, Constants, Notifications, Permissions } from "expo";
 import * as Font from 'expo-font';
 
 import AppNavigator from './src/Navigation/AppNavigator';
 import Signin from './src/Scene/Signin';
+import firebase from 'react-native-firebase';
+import * as push from './src/Component/push';
 
 interface Props {
 
 }
 interface States {
-  theme: any,
+  theme: any, 
   currentTheme: any,
   isReady: boolean
 }
-
-
 export default class App extends React.Component<Props, States> {
+  notificationListener:Function;
+  notificationOpenedListener:Function;
+
   constructor(props: Props) {
     super(props);
     console.log(props);
