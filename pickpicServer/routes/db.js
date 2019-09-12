@@ -30,6 +30,7 @@ const EventSchema = new mongoose.Schema({
     createdAt: Date,
     expiredAt: Date,
     status: 'string',
+    genderPermission: 'string',
     voters: [],
     photos : [mongoose.Schema({
         path : 'string',
@@ -67,7 +68,7 @@ exports.connect = () => {
     });
 }
 
-exports.createEvent = (owner, title, expiredAt, photos) => {
+exports.createEvent = (owner, title, expiredAt, genderPermission, photos) => {
     console.log("db.js - createEvent");
 
     var newEvent = new Event({
@@ -76,6 +77,7 @@ exports.createEvent = (owner, title, expiredAt, photos) => {
         createdAt: Date.now(),
         expiredAt: moment(expiredAt),
         status: 'voting',
+        genderPermission, 
         voters: [],
         photos: photos
     });
@@ -194,7 +196,7 @@ exports.createVote = async (voter, eventId, photoId) => {
 /* Users */
 
 exports.getUser = (id, params) => {
-    if( param.indexOf('password') != -1 )
+    if( params.indexOf('password') != -1 )
         return Promise.reject('Don\'t ask password' );
     var column = {};
     for(let param of params) {

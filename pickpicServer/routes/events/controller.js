@@ -37,6 +37,7 @@ exports.create = (req, res) => {
     const owner = req.body.owner;
     const title = req.body.title;
     const expiredAt = req.body.expiredAt;
+    const genderPermission = req.body.genderPermission;
     if (!owner || !owner.length) {
         return res.status(400).json({ error: 'Invalid id' });
     }
@@ -46,13 +47,18 @@ exports.create = (req, res) => {
     if (!expiredAt || !expiredAt.length) {
         return res.status(400).json({ error: 'Invalid expiredAt' });
     }
+    if (!genderPermission || !genderPermission.length 
+        || ! (genderPermission == "Male" || genderPermission == "Female" || genderPermission == "All")) {
+        return res.status(400).json({ error: 'Invalid genderPermission' });
+    }
+
 
     if (req.files.length < 2) {
         console.error("photo uploaded less than 2");
         return res.status(400).json({ error: 'Upload at least 2 photos' })
     }
 
-    db.createEvent(owner, title, expiredAt, req.files)
+    db.createEvent(owner, title, expiredAt, genderPermission, req.files)
         .then((result) => {
             console.debug(req.headers);
             console.debug(req.body);
