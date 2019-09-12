@@ -4,11 +4,14 @@ import * as Permissions from 'expo-permissions';
 import Constants from 'expo-constants';
 import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
 import React, { createRef } from 'react'
-import DatePicker from 'react-native-datepicker'
+// import DatePicker from 'react-native-datepicker'
 import moment from "moment";
 import { NavigationEvents } from 'react-navigation';
 const { width: screenWidth } = Dimensions.get('window')
-import ActionSheet from 'react-native-actionsheet'
+import ActionSheet from 'react-native-actionsheet';
+import GenderPermisson, { getPermissionLabel, getPermissionLables, getPermissionValue } from '../../Component/GenderPermission';
+
+
 
 interface Props {
 };
@@ -19,11 +22,10 @@ interface State {
   }[],
   title: string,
   expiredDate: Date,
-  minDate: Date,
-  maxDate: Date,
   modalVisible: boolean,
-  datePickPeriod: any,
-  datePickMode: string,
+  dateDurationAmount: any, //number로 하면 error 발생
+  dateDurationUnit: string,
+  genderPermission: GenderPermisson,
 }
 
 interface ImageFile extends Blob {
@@ -38,6 +40,10 @@ export default class Upload extends React.Component<Props, State>{
   carouselRef = createRef<Carousel>();
   serverAddress = "http://localhost:3000";
   eventRoute = this.serverAddress + "/events";
+  ActionSheet = {
+    option: null,
+    gender: null,
+  };
 
   constructor(props) {
     super(props);
@@ -45,83 +51,71 @@ export default class Upload extends React.Component<Props, State>{
   }
 
   initState() {
-    let minDate = new Date();
-    let maxDate = new Date();
-    minDate.setDate(minDate.getDate() + 3);
-    maxDate.setDate(minDate.getDate() + 12);
-    const state =
-    {
+    const durationAmount = 2;
+    const durationUnit = "day";
+    return {
       imageInfos: [{ image: null, index: 0 }],
       title: "Title을 입력해주세요.",
-      expiredDate: moment().add(2, "day").toDate(),
-      minDate: minDate,
-      maxDate: maxDate,
+      expiredDate: moment().add(durationAmount, durationUnit).toDate(),
       modalVisible: false,
-      datePickPeriod: 2,
-      datePickMode: "day",
+      dateDurationAmount: durationAmount,
+      dateDurationUnit: durationUnit,
+      genderPermission: GenderPermisson.ALL
     };
-    console.log(minDate);
-    return state;
   }
 
-  snapToNext = () => {
-    this.carouselRef.current.snapToNext();
+  componentDidMount() {
+    this.getPermissionAsync();
+  }
+  
+  render() {
+    let { imageInfos: imageInfos } = this.state;
+
+    return (
+      <View style={{ flex: 1 }}>
+        {/* Upload 에서는 NavigationEvent를 두지 않고, 현재 상태 유지시킨다? */}
+        <NavigationEvents />
+        <View style={{ flex: 1, marginTop: 20 }}>
+          <TextInput
+            style={styles.title}
+            onChangeText={(title) => this.setState({ title })}
+            value={this.state.title}
+          />
+          <View style={{ flexDirection: 'row' }}>
+            <Text style={[styles.text, { flex: 3 }]}>Expired {moment(this.state.expiredDate).fromNow()}</Text>
+            <Text style={styles.text}>{getPermissionLabel(this.state.genderPermission)}</Text>
+            {/* <Text onPress={this.showActionSheet}>Open ActionSheet</Text> */}
+            <View style={{ flex: 1, alignItems: 'flex-end', paddingHorizontal: 15 }}>
+              <Button title=":" onPress={() => this.showActionSheet('option')} />
+            </View>
+          </View>
+          {this.optionsActionSheet}
+          {this.genderActionSheet}
+          {this.modalDatePicker}
+        </View>
+
+        <View style={{ height: screenWidth }}>
+          <Carousel
+            ref={this.carouselRef}
+            layout={'stack'}
+            sliderWidth={screenWidth}
+            sliderHeight={screenWidth}
+            itemWidth={screenWidth - 60}
+            data={imageInfos} //{this.state.events[this.state.eventIdx].photos}
+            renderItem={this._renderItem}
+            hasParallaxImages={true}
+          />
+        </View>
+        <View style={{ flex: 1, marginTop: 20 }}>
+          {imageInfos &&
+            <Button title="Event 생성" onPress={this.sendImage} />}
+        </View>
+      </View >
+    );
   }
 
-  snapToPrev = () => {
-    this.carouselRef.current.snapToPrev();
-  }
-
-  sendImage = async () => {
-    let { imageInfos: images } = this.state;
-    const formdata = new FormData();
-
-    if (images.length < 3) {
-      alert("사진을 2장이상 선택해 주세요.");
-      return;
-    }
-
-
-    images = images.slice(1, images.length); // detach add button 
-    for (let imageInfo of images) {
-      let uri = imageInfo.image.uri;
-      var filename = uri.substring(uri.lastIndexOf('/') + 1);
-      var upload: ImageFile = { uri: uri, name: filename, type: 'image/jpeg', size: null, slice: null };
-      formdata.append("userfile", upload);
-    }
-
-    try {
-      formdata.append("owner", "bakyuns");
-      formdata.append("title", this.state.title);
-      formdata.append("expiredAt", this.state.expiredDate.toISOString());
-      // console.debug(formdata);
-      var response = await fetch(this.eventRoute, {
-        method: 'post',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        body: formdata
-      });
-
-      if (!response.ok) {
-        console.error("ERROR: " + response.statusText);
-        throw Error(response.statusText);
-      }
-
-      var responseJson = await response.json();
-      const id = responseJson._id;
-      console.debug('responseJson', responseJson);
-      console.log('image uploaded. id: ', id);
-      alert("Event 생성 완료: " + id);
-
-      this.setState(this.initState());
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
+  /* ParallaxImage */
   _renderItem = ({ item, index }, parallaxProps) => {
-
     if (index == 0) { // add button
       return (
         <View style={styles.item}>
@@ -151,50 +145,65 @@ export default class Upload extends React.Component<Props, State>{
       );
   }
 
-  get datePicker() {
-    return <DatePicker
-      style={{ width: 200 }}
-      date={this.state.expiredDate}
-      mode="datetime"
-      placeholder="select date"
-      format="YYYY-MM-DD HH:mm"
-      minDate={this.state.minDate}
-      maxDate={this.state.maxDate}
-      confirmBtnText="Confirm"
-      cancelBtnText="Cancel"
-      locale="kor"
-      customStyles={{
-        dateInput: {
-          marginLeft: 36
-        }
-        // ... You can check the source to find the other keys.
-      }}
-      onDateChange={(date) => {
-        this.setState({ expiredDate: new Date(moment(date, 'YYYY-MM-DD HH:mm', true).format()) });
-      }}
-    />
+
+  /* ActionSheets */
+  showActionSheet = (sheet: string) => {
+    console.debug('show actionsheet ', sheet); 
+    this.ActionSheet[sheet].show();
   }
 
-  ActionSheet2 = null;
-
-  showActionSheet = () => {
-    this.ActionSheet2.show()
+  get optionsActionSheet() {
+    return (<ActionSheet
+      ref={sheet => this.ActionSheet.option = sheet}
+      title={'Options'}
+      options={['Expired ' + moment(this.state.expiredDate).fromNow(), getPermissionLabel(this.state.genderPermission), 'Cancel']}
+      cancelButtonIndex={2}
+      // destructiveButtonIndex={2}
+      onPress={(index) => {
+        if (index == 0)
+          this.setState({ modalVisible: true })
+        else if (index == 1)
+          this.showActionSheet('gender');
+      }}
+    />);
   }
 
+  get genderActionSheet() {
+    let options = getPermissionLables();
+    const cancelIdx = options.length;
+    options.push('Cancel');
+
+    return (<ActionSheet
+      ref={sheet => this.ActionSheet.gender = sheet}
+      title={'투표대상'}
+      options={options}
+      cancelButtonIndex={cancelIdx}
+      // destructiveButtonIndex={cancelIdx}
+      onPress={(index: GenderPermisson) => {
+        if (index != cancelIdx)
+          this.setState({ genderPermission: index });
+      }}
+    />);
+  }
+
+  /* Modal DatePicker */
   handleModalClose = () => {
-    let a = moment();
-    a.add(3, "day");
-
     this.setState({
       modalVisible: false,
-      expiredDate: moment().add(this.state.datePickPeriod, this.state.datePickMode).toDate(),
+      expiredDate: moment().add(this.state.dateDurationAmount, this.state.dateDurationUnit).toDate(),
+    });
+  }
+  
+  setDuration = (dateDurationAmount, dateDurationUnit) => {
+    this.setState({
+      dateDurationAmount,
+      dateDurationUnit
     });
   }
 
-  get datePick() {
-    let pickerItem = [];
+  get modalDatePicker() {
     let period = 10;
-    switch (this.state.datePickMode) {
+    switch (this.state.dateDurationUnit) {
       case "hour":
         period = 24;
         break;
@@ -205,7 +214,11 @@ export default class Upload extends React.Component<Props, State>{
         period = 4;
         break;
     }
+
+    let pickerItem = [];
     Array.from({ length: period }, (x, i) => pickerItem.push(<Picker.Item key={String(i + 1)} label={String(i + 1)} value={i + 1} />));
+    console.debug(period, this.state.dateDurationUnit)
+
     return (
       <Modal
         animationType='slide'
@@ -216,97 +229,89 @@ export default class Upload extends React.Component<Props, State>{
         <View style={[styles.overlay]}>
           <View style={[styles.modal]}>
             <View style={[styles.modalBtnContainer]}>
-                <Button title="Done" onPress={this.handleModalClose} />
-          </View>
-          <View style={[{flexDirection:'row'}]}>
-            <Picker
-              selectedValue={this.state.datePickPeriod}
-              style={{ flex: 1 }}
-              onValueChange={(itemValue, itemIndex) =>
-                this.setState({
-                  datePickPeriod: itemValue
-                })
-              }>
-              {pickerItem}
-            </Picker>
-            <Picker
-              selectedValue={this.state.datePickMode}
-              style={{ flex: 1 }}
-              onValueChange={(itemValue, itemIndex) =>
-                this.setState({
-                  datePickMode: itemValue
-                })
-              }>
-              <Picker.Item label="시간 뒤" value="hour" />
-              <Picker.Item label="일 뒤" value="day" />
-              <Picker.Item label="주 뒤" value="week" />
-            </Picker>
-          </View>
+              <Button title="Done" onPress={this.handleModalClose} />
+            </View>
+            <View style={[{ flexDirection: 'row' }]}>
+              <Picker
+                selectedValue={this.state.dateDurationAmount}
+                style={{ flex: 1 }}
+                onValueChange={(itemValue, itemIndex) => this.setDuration(itemValue, this.state.dateDurationUnit)
+                }>
+                {pickerItem}
+              </Picker>
+              <Picker
+                selectedValue={this.state.dateDurationUnit}
+                style={{ flex: 1 }}
+                onValueChange={(itemValue, itemIndex) => this.setDuration(this.state.dateDurationAmount, itemValue)
+                }>
+                <Picker.Item label="시간 뒤" value="hour" />
+                <Picker.Item label="일 뒤" value="day" />
+                <Picker.Item label="주 뒤" value="week" />
+              </Picker>
+            </View>
           </View>
         </View>
       </Modal>
     );
   }
-  render() {
-    let { imageInfos: imageInfos } = this.state;
 
-    return (
-      <View style={{ flex: 1 }}>
-        {/* Upload 에서는 NavigationEvent를 두지 않고, 현재 상태 유지시킨다? */}
-        <NavigationEvents />
-        <View style={{ flex: 1, marginTop: 20 }}>
-
-          <Text style={styles.text}>Expired {moment(this.state.expiredDate).fromNow()}</Text>
-          <TextInput
-            style={styles.title}
-            onChangeText={(title) => this.setState({ title })}
-            value={this.state.title}
-          />
-          <Text onPress={this.showActionSheet}>Open ActionSheet</Text>
-          <ActionSheet
-            ref={sheet => this.ActionSheet2 = sheet}
-            title={'Options'}
-            options={['Expired ' + moment(this.state.expiredDate).fromNow(), '이성만 선택가능', 'cancel']}
-            cancelButtonIndex={2}
-            // destructiveButtonIndex={1}
-            onPress={(index) => {
-              if (index == 0)
-                this.setState({ modalVisible: true })
-            }}
-          />
-          {this.datePick}
-        </View>
-
-        {/* <View style={{ height: screenWidth }}>
-          <Carousel
-            ref={this.carouselRef}
-            layout={'stack'}
-            sliderWidth={screenWidth}
-            sliderHeight={screenWidth}
-            itemWidth={screenWidth - 60}
-            data={imageInfos} //{this.state.events[this.state.eventIdx].photos}
-            renderItem={this._renderItem}
-            hasParallaxImages={true}
-          />
-        </View> */}
-        <View style={{ flex: 1, marginTop: 20 }}>
-          {imageInfos &&
-            <Button title="Event 생성" onPress={this.sendImage} />}
-        </View>
-      </View >
-    );
-
-  }
-  componentDidMount() {
-    this.getPermissionAsync();
-  }
-
+  /* Permissions */
   getPermissionAsync = async () => {
     if (Constants.platform.ios) {
       const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
       if (status !== 'granted') {
         alert('Sorry, we need camera roll permissions to make this work!');
       }
+    }
+  }
+
+  /* Handling Images */
+  sendImage = async () => {
+    let { imageInfos: images } = this.state;
+    const formdata = new FormData();
+
+    if (images.length < 3) {
+      alert("사진을 2장이상 선택해 주세요.");
+      return;
+    }
+
+    images = images.slice(1, images.length); // detach add button 
+    for (let imageInfo of images) {
+      let uri = imageInfo.image.uri;
+      var filename = uri.substring(uri.lastIndexOf('/') + 1);
+      var upload: ImageFile = { uri: uri, name: filename, type: 'image/jpeg', size: null, slice: null };
+      formdata.append("userfile", upload);
+    }
+
+    try {
+      formdata.append("owner", "bakyuns");
+      formdata.append("title", this.state.title);
+      formdata.append("genderPermission", getPermissionValue(this.state.genderPermission));
+      formdata.append("expiredAt", this.state.expiredDate.toISOString());
+      // console.debug(formdata);
+      var response = await fetch(this.eventRoute, {
+        method: 'post',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formdata
+      });
+
+      console.debug(formdata);
+      if (!response.ok) {
+        console.error("ERROR: " + response.statusText);
+        throw Error(response.statusText);
+      }
+
+      var responseJson = await response.json();
+      const id = responseJson._id;
+      console.debug('responseJson', responseJson);
+      console.log('image uploaded. id: ', id);
+      alert("Event 생성 완료: " + id);
+
+      this.setState(this.initState());
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -328,6 +333,38 @@ export default class Upload extends React.Component<Props, State>{
     }
   };
 
+  /* Deprecated */
+  // snapToNext = () => {
+  //   this.carouselRef.current.snapToNext();
+  // }
+
+  // snapToPrev = () => {
+  //   this.carouselRef.current.snapToPrev();
+  // }
+
+  // get datePicker() {
+  //   return <DatePicker
+  //     style={{ width: 200 }}
+  //     date={this.state.expiredDate}
+  //     mode="datetime"
+  //     placeholder="select date"
+  //     format="YYYY-MM-DD HH:mm"
+  //     minDate={this.state.minDate}
+  //     maxDate={this.state.maxDate}
+  //     confirmBtnText="Confirm"
+  //     cancelBtnText="Cancel"
+  //     locale="kor"
+  //     customStyles={{
+  //       dateInput: {
+  //         marginLeft: 36
+  //       }
+  //       // ... You can check the source to find the other keys.
+  //     }}
+  //     onDateChange={(date) => {
+  //       this.setState({ expiredDate: new Date(moment(date, 'YYYY-MM-DD HH:mm', true).format()) });
+  //     }}
+  //   />
+  // }
 }
 
 const styles = StyleSheet.create({
