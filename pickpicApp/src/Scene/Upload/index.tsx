@@ -1,4 +1,4 @@
-import { Button, Dimensions, StyleSheet, Image, View, Text, Platform, TouchableOpacity, TextInput } from 'react-native';
+import { Modal, Button, Dimensions, StyleSheet, Image, View, Text, Platform, TouchableOpacity, TextInput, TouchableHighlight, Picker } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Permissions from 'expo-permissions';
 import Constants from 'expo-constants';
@@ -6,8 +6,9 @@ import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
 import React, { createRef } from 'react'
 import DatePicker from 'react-native-datepicker'
 import moment from "moment";
-
+import { NavigationEvents } from 'react-navigation';
 const { width: screenWidth } = Dimensions.get('window')
+import ActionSheet from 'react-native-actionsheet'
 
 interface Props {
 };
@@ -19,7 +20,10 @@ interface State {
   title: string,
   expiredDate: Date,
   minDate: Date,
-  maxDate: Date
+  maxDate: Date,
+  modalVisible: boolean,
+  datePickPeriod: any,
+  datePickMode: string,
 }
 
 interface ImageFile extends Blob {
@@ -49,9 +53,12 @@ export default class Upload extends React.Component<Props, State>{
     {
       imageInfos: [{ image: null, index: 0 }],
       title: "Title을 입력해주세요.",
-      expiredDate: minDate,
+      expiredDate: moment().add(2, "day").toDate(),
       minDate: minDate,
       maxDate: maxDate,
+      modalVisible: false,
+      datePickPeriod: 2,
+      datePickMode: "day",
     };
     console.log(minDate);
     return state;
@@ -144,51 +151,149 @@ export default class Upload extends React.Component<Props, State>{
       );
   }
 
+  get datePicker() {
+    return <DatePicker
+      style={{ width: 200 }}
+      date={this.state.expiredDate}
+      mode="datetime"
+      placeholder="select date"
+      format="YYYY-MM-DD HH:mm"
+      minDate={this.state.minDate}
+      maxDate={this.state.maxDate}
+      confirmBtnText="Confirm"
+      cancelBtnText="Cancel"
+      locale="kor"
+      customStyles={{
+        dateInput: {
+          marginLeft: 36
+        }
+        // ... You can check the source to find the other keys.
+      }}
+      onDateChange={(date) => {
+        this.setState({ expiredDate: new Date(moment(date, 'YYYY-MM-DD HH:mm', true).format()) });
+      }}
+    />
+  }
+
+  ActionSheet2 = null;
+
+  showActionSheet = () => {
+    this.ActionSheet2.show()
+  }
+
+  handleModalClose = () => {
+    let a = moment();
+    a.add(3, "day");
+
+    this.setState({
+      modalVisible: false,
+      expiredDate: moment().add(this.state.datePickPeriod, this.state.datePickMode).toDate(),
+    });
+  }
+
+  get datePick() {
+    let pickerItem = [];
+    let period = 10;
+    switch (this.state.datePickMode) {
+      case "hour":
+        period = 24;
+        break;
+      case "day":
+        period = 31;
+        break;
+      case "week":
+        period = 4;
+        break;
+    }
+    Array.from({ length: period }, (x, i) => pickerItem.push(<Picker.Item key={String(i + 1)} label={String(i + 1)} value={i + 1} />));
+    return (
+      <Modal
+        animationType='slide'
+        transparent={true}
+        visible={this.state.modalVisible}
+        onRequestClose={this.handleModalClose}
+      >
+        <View style={[styles.overlay]}>
+          <View style={[styles.modal]}>
+            <View style={[styles.modalBtnContainer]}>
+                <Button title="Done" onPress={this.handleModalClose} />
+          </View>
+          <View style={[{flexDirection:'row'}]}>
+            <Picker
+              selectedValue={this.state.datePickPeriod}
+              style={{ flex: 1 }}
+              onValueChange={(itemValue, itemIndex) =>
+                this.setState({
+                  datePickPeriod: itemValue
+                })
+              }>
+              {pickerItem}
+            </Picker>
+            <Picker
+              selectedValue={this.state.datePickMode}
+              style={{ flex: 1 }}
+              onValueChange={(itemValue, itemIndex) =>
+                this.setState({
+                  datePickMode: itemValue
+                })
+              }>
+              <Picker.Item label="시간 뒤" value="hour" />
+              <Picker.Item label="일 뒤" value="day" />
+              <Picker.Item label="주 뒤" value="week" />
+            </Picker>
+          </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  }
   render() {
     let { imageInfos: imageInfos } = this.state;
 
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <TextInput
-          style={styles.title}
-          onChangeText={(title) => this.setState({ title })}
-          value={this.state.title}
-        />
-        <DatePicker
-          style={{ width: 200 }}
-          date={this.state.expiredDate}
-          mode="datetime"
-          placeholder="select date"
-          format="YYYY-MM-DD HH:mm"
-          minDate={this.state.minDate}
-          maxDate={this.state.maxDate}
-          confirmBtnText="Confirm"
-          cancelBtnText="Cancel"
-          locale="kor"
-          customStyles={{
-            dateInput: {
-              marginLeft: 36
-            }
-            // ... You can check the source to find the other keys.
-          }}
-          onDateChange={(date) => {
-            this.setState({ expiredDate: new Date(moment(date, 'YYYY-MM-DD HH:mm', true).format()) });
-          }}
-        />
+      <View style={{ flex: 1 }}>
+        {/* Upload 에서는 NavigationEvent를 두지 않고, 현재 상태 유지시킨다? */}
+        <NavigationEvents />
+        <View style={{ flex: 1, marginTop: 20 }}>
 
-        <Carousel
-          ref={this.carouselRef}
-          layout={'stack'}
-          sliderWidth={screenWidth}
-          sliderHeight={screenWidth}
-          itemWidth={screenWidth - 60}
-          data={imageInfos} //{this.state.events[this.state.eventIdx].photos}
-          renderItem={this._renderItem}
-          hasParallaxImages={true}
-        />
-        {imageInfos &&
-          <Button title="Event 생성" onPress={this.sendImage} />}
-      </View>
+          <Text style={styles.text}>Expired {moment(this.state.expiredDate).fromNow()}</Text>
+          <TextInput
+            style={styles.title}
+            onChangeText={(title) => this.setState({ title })}
+            value={this.state.title}
+          />
+          <Text onPress={this.showActionSheet}>Open ActionSheet</Text>
+          <ActionSheet
+            ref={sheet => this.ActionSheet2 = sheet}
+            title={'Options'}
+            options={['Expired ' + moment(this.state.expiredDate).fromNow(), '이성만 선택가능', 'cancel']}
+            cancelButtonIndex={2}
+            // destructiveButtonIndex={1}
+            onPress={(index) => {
+              if (index == 0)
+                this.setState({ modalVisible: true })
+            }}
+          />
+          {this.datePick}
+        </View>
+
+        {/* <View style={{ height: screenWidth }}>
+          <Carousel
+            ref={this.carouselRef}
+            layout={'stack'}
+            sliderWidth={screenWidth}
+            sliderHeight={screenWidth}
+            itemWidth={screenWidth - 60}
+            data={imageInfos} //{this.state.events[this.state.eventIdx].photos}
+            renderItem={this._renderItem}
+            hasParallaxImages={true}
+          />
+        </View> */}
+        <View style={{ flex: 1, marginTop: 20 }}>
+          {imageInfos &&
+            <Button title="Event 생성" onPress={this.sendImage} />}
+        </View>
+      </View >
     );
 
   }
@@ -226,10 +331,38 @@ export default class Upload extends React.Component<Props, State>{
 }
 
 const styles = StyleSheet.create({
+  modal: { backgroundColor: '#fff', height: 300, width: '100%', margin: 0 },
+  modalBtnContainer: {
+    width: '100%',
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 15,
+    // marginTop: 15
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,.3)',
+    alignItems: 'center',
+    justifyContent: 'flex-end'
+  },
   button: {
     width: screenWidth - 60,
     height: screenWidth - 60,
     opacity: 0.1
+  },
+  title: {
+    // paddingHorizontal: 30,
+    // backgroundColor: 'transparent',
+    // color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 30,
+    fontWeight: 'bold',
+    textAlign: 'center'
+  },
+  text: {
+    margin: 10,
+    fontSize: 14,
+    textAlign: 'right'
   },
   item: {
     width: screenWidth - 60,
@@ -244,14 +377,5 @@ const styles = StyleSheet.create({
   image: {
     ...StyleSheet.absoluteFillObject,
     resizeMode: 'cover',
-  },
-  title: {
-    width: screenWidth - 60,
-    paddingHorizontal: 30,
-    backgroundColor: 'transparent',
-    // color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center'
   },
 })
