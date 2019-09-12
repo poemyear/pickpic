@@ -10,7 +10,7 @@ import { NavigationEvents } from 'react-navigation';
 const { width: screenWidth } = Dimensions.get('window')
 import ActionSheet from 'react-native-actionsheet';
 import GenderPermisson, { getPermissionLabel, getPermissionLables, getPermissionValue } from '../../Component/GenderPermission';
-
+import Toast from 'react-native-root-toast';
 
 
 interface Props {
@@ -22,10 +22,11 @@ interface State {
   }[],
   title: string,
   expiredDate: Date,
-  modalVisible: boolean,
   dateDurationAmount: any, //number로 하면 error 발생
   dateDurationUnit: string,
   genderPermission: GenderPermisson,
+  toastVisible: boolean,
+  modalVisible: boolean,
 }
 
 interface ImageFile extends Blob {
@@ -57,10 +58,11 @@ export default class Upload extends React.Component<Props, State>{
       imageInfos: [{ image: null, index: 0 }],
       title: "Title을 입력해주세요.",
       expiredDate: moment().add(durationAmount, durationUnit).toDate(),
-      modalVisible: false,
       dateDurationAmount: durationAmount,
       dateDurationUnit: durationUnit,
-      genderPermission: GenderPermisson.ALL
+      genderPermission: GenderPermisson.ALL,
+      modalVisible: false,
+      toastVisible: false,
     };
   }
 
@@ -255,6 +257,35 @@ export default class Upload extends React.Component<Props, State>{
     );
   }
 
+  /* Toast */
+  showToast = (message:string) => {
+    if (!this.state.toastVisible)
+    Toast.show(message, {
+      duration: 1000,
+      // duration: Toast.durations.SHORT,
+      position: 750,
+      // position: Toast.positions.CENTER,
+      shadow: true,
+      animation: true,
+      hideOnPress: true,
+      delay: 0,
+      onShow: () => {
+        this.setState({toastVisible:true})
+          // calls on toast\`s appear animation start
+      },
+      onShown: () => {
+          // calls on toast\`s appear animation end.
+      },
+      onHide: () => {
+          // calls on toast\`s hide animation start.
+      },
+      onHidden: () => {
+        this.setState({toastVisible:false})
+          // calls on toast\`s hide animation end.
+      }
+  });
+  }
+
   /* Permissions */
   getPermissionAsync = async () => {
     if (Constants.platform.ios) {
@@ -271,7 +302,8 @@ export default class Upload extends React.Component<Props, State>{
     const formdata = new FormData();
 
     if (images.length < 3) {
-      alert("사진을 2장이상 선택해 주세요.");
+      this.showToast("사진을 2장이상 선택해 주세요.");
+      // alert("사진을 2장이상 선택해 주세요.");
       return;
     }
 
@@ -307,7 +339,7 @@ export default class Upload extends React.Component<Props, State>{
       const id = responseJson._id;
       console.debug('responseJson', responseJson);
       console.log('image uploaded. id: ', id);
-      alert("Event 생성 완료: " + id);
+      this.showToast("Event 생성 완료: " + id);
 
       this.setState(this.initState());
     } catch (err) {
