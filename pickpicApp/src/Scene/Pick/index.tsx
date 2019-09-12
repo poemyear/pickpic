@@ -20,7 +20,7 @@ interface State {
             uri: string
         }[];
     }[],
-    like:boolean,
+    like: boolean,
 }
 
 
@@ -36,7 +36,7 @@ export default class Pick extends React.Component<Props, State>{
         this.state = {
             eventIdx: -1,
             events: [],
-            like:false,
+            like: false,
         }
         console.debug('Pick constructor');
     }
@@ -74,12 +74,12 @@ export default class Pick extends React.Component<Props, State>{
                 this.setState({
                     eventIdx: events.length > 0 ? 0 : -1,
                     events: events,
-                    like:false,
+                    like: false,
                 });
             } else {
                 this.setState({
                     eventIdx: this.state.eventIdx + 1,
-                    like:false,
+                    like: false,
                 })
             }
         } catch (err) {
@@ -158,12 +158,12 @@ export default class Pick extends React.Component<Props, State>{
 
     likeAndVote = () => {
         if (!this.state.like) {
-            this.setState(()=> {
+            this.setState(() => {
                 Animated.sequence([
-                    Animated.spring(this.heartOpacity, { toValue: 1, useNativeDriver: true, tension: 50, delay:0 }),
-                    Animated.spring(this.heartOpacity, { toValue: 0, useNativeDriver: true, tension: 100, delay:0 }),
+                    Animated.spring(this.heartOpacity, { toValue: 1, useNativeDriver: true, tension: 50, delay: 0 }),
+                    Animated.spring(this.heartOpacity, { toValue: 0, useNativeDriver: true, tension: 100, delay: 0 }),
                 ]).start(this.vote);
-                return {like:true};
+                return { like: true };
             });
         }
     }
@@ -174,15 +174,15 @@ export default class Pick extends React.Component<Props, State>{
                 <Animated.Image
                     source={require('../../Component/heart.png')}
                     style={[
-                        styles.overlayHeart, 
+                        styles.overlayHeart,
                         {
                             opacity: this.heartOpacity,
                             transform: [{
-                                    scale: this.heartOpacity.interpolate({
-                                        inputRange: [0, 1],
-                                        outputRange: [0.5, 1],
-                                    }),
-                                },],
+                                scale: this.heartOpacity.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [0.5, 1],
+                                }),
+                            },],
                         },]}
                 />
             </View>
@@ -194,26 +194,32 @@ export default class Pick extends React.Component<Props, State>{
             event = this.state.events[this.state.eventIdx];
         }
         return (
-            <View>
+            <View style={{ flex: 1 }}>
                 <NavigationEvents
-                    onWillFocus={()=>this.fetchEvents}
+                    onWillFocus={() => this.fetchEvents}
                 />
-                <Text style={styles.title}>Current UserId: {this.userId}</Text>
-                <Text style={styles.title}>{event.title}</Text>
-                <Text style={styles.title}>Expired {moment(event.expiredAt).fromNow()}</Text>
-                <Carousel
-                    ref={this.carouselRef}
-                    sliderWidth={screenWidth}
-                    sliderHeight={screenWidth}
-                    itemWidth={screenWidth - 60}
-                    data={event.photos}
-                    renderItem={this._renderItem}
-                    hasParallaxImages={true}
-                />
-                {this.renderOverlayHeart}
-                <Button
-                    title={'Pick'}
-                    onPress={this.likeAndVote} />
+                <View style={{ flex:1, marginTop: 20 }}>
+                    <Text style={styles.text}>Current UserId: {this.userId}</Text>
+                    <Text style={styles.text}>Expired {moment(event.expiredAt).fromNow()}</Text>
+                    <Text style={styles.title}>{event.title}</Text>
+                </View>
+            <View style={{height:screenWidth}}>
+                    <Carousel
+                        ref={this.carouselRef}
+                        sliderWidth={screenWidth}
+                        sliderHeight={screenWidth}
+                        itemWidth={screenWidth - 60}
+                        data={event.photos}
+                        renderItem={this._renderItem}
+                        hasParallaxImages={true}
+                    />
+                    {this.renderOverlayHeart}
+                    </View>
+            <View style={{flex:1}}>
+                    <Button
+                        title={'Pick'}
+                        onPress={this.likeAndVote} />
+                    </View>
             </View>
         );
     }
@@ -235,12 +241,17 @@ const styles = StyleSheet.create({
         resizeMode: 'cover',
     },
     title: {
-        paddingHorizontal: 30,
-        backgroundColor: 'transparent',
+        // paddingHorizontal: 30,
+        // backgroundColor: 'transparent',
         // color: 'rgba(255, 255, 255, 0.9)',
-        fontSize: 20,
+        fontSize: 30,
         fontWeight: 'bold',
         textAlign: 'center'
+    },
+    text: {
+        margin:10,
+        fontSize: 14,
+        textAlign: 'right'
     },
     overlay: {
         position: 'absolute',
