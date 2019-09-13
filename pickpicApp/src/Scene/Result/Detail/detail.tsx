@@ -1,4 +1,4 @@
-import { Button, Image, Dimensions, StyleSheet, View, Text, Platform, ProgressViewIOSComponent, ScrollView } from 'react-native';
+import { Button, Image, Dimensions, StyleSheet, View, Text, Platform, ProgressViewIOSComponent, ScrollView, Modal } from 'react-native';
 import React from 'react'
 import { BarChart, Grid, YAxis } from 'react-native-svg-charts'
 import { Defs, LinearGradient, Text as SvgText, Image as SvgImage, Stop } from "react-native-svg";
@@ -21,6 +21,7 @@ interface Props {
         count: number,
         key: string,
         thumbnailPath: string
+        imagePath: string
     }[]
 }
 interface State {
@@ -30,9 +31,12 @@ interface State {
         count: number,
         percent: string,
         key: string,
-        svg: { fill: string },
-        thumbnailPath: string
-    }[]
+        svg: { fill: string, onPressIn: any, onPressOut: any },
+        thumbnailPath: string,
+        imagePath: string
+    }[],
+    modalVisible: boolean,
+    modalImagePath: string,
 }
 
 export default class Detail extends React.Component<Props, State>{
@@ -42,12 +46,20 @@ export default class Detail extends React.Component<Props, State>{
     constructor(props: Props) {
         super(props);
         const randomColor = () => {
-            return { fill: ('#' + (Math.random() * 0xFFFFFF << 0).toString(16) + '000000').slice(0, 7) };
+            return ('#' + (Math.random() * 0xFFFFFF << 0).toString(16) + '000000').slice(0, 7);
         }
         let data = [];
         console.log(this.props.eventTotalVote);
-        this.props.eventResult.map(result => data.push({ ...result, svg: randomColor(), percent: (result.count * 100 / this.props.eventTotalVote).toPrecision(2) + "%" }));
-        this.state = { data };
+        this.props.eventResult.map(result => data.push({
+            ...result,
+            svg: {
+                fill: randomColor(),
+                onPressIn: () => { this.setState({ modalVisible: true, modalImagePath: result.imagePath }) },
+                onPressOut: () => { this.setState({ modalVisible: false, modalImagePath: null }) }
+            },
+            percent: (result.count * 100 / this.props.eventTotalVote).toPrecision(2) + "%"
+        }));
+        this.state = { data, modalVisible: false, modalImagePath: null };
     }
 
     render() {
@@ -178,6 +190,7 @@ export default class Detail extends React.Component<Props, State>{
 
                     </BarChart>
                 </View>
+                    <Text style={{textAlign:'center', color:'gray'}}> 차트를 터치하면 사진이 확대됩니다. </Text>
                 <View style={{ flex: pieFlex }}>
                     <PieChart
                         style={{ flex: 1 }}
@@ -190,13 +203,48 @@ export default class Detail extends React.Component<Props, State>{
                         <PieLabels slices={srcData} />
                     </PieChart>
                 </View>
+                {this.modalPressInImageVIew}
             </View>
         );
 
     }
+
+    /* Modal */
+    handleModalClose = () => {
+        this.setState({
+            modalVisible: false,
+        });
+    }
+
+    get modalPressInImageVIew() {
+        const modalImagePath = this.state.modalImagePath;
+        return (
+            { modalImagePath } &&
+            <Modal
+                animationType='none'
+                transparent={true}
+                visible={this.state.modalVisible}
+                onRequestClose={this.handleModalClose}
+            >
+                <View style={[styles.overlay]}>
+                    <Image
+                        key={this.props.eventId + 123}
+                        style={{ width: screenWidth - 30, height: screenWidth - 30 }}
+                        source={{ uri: this.serverAddress + "/" + modalImagePath }}
+                    />
+                </View>
+            </Modal>
+        );
+    }
 }
 
 const styles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,.3)',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
     eventInfoContainer: {
         height: "15%",
     },

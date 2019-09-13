@@ -24,6 +24,7 @@ interface State {
             photoId: string,
             path: string,
             thumbnailPath: string,
+            imagePath: string,
             count: number,
             svg: any,
             key: string
@@ -97,6 +98,7 @@ export default class CheckResult extends React.Component<Props, State>{
                 // count: result.count
                 count: dummyCount,
                 thumbnailPath: result.thumbnailPath,
+                imagePath: result.path,
                 key: i
             });
             sum += dummyCount;
