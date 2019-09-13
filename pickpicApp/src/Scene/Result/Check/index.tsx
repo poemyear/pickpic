@@ -2,6 +2,7 @@ import { Button, Dimensions, StyleSheet, View, Image, Text, Platform, Switch, Sc
 import React from 'react'
 import SwitchButton from "../../../Component/SwitchButton.js"
 import { NavigationEvents } from 'react-navigation';
+import ActionSheet from 'react-native-actionsheet';
 
 const { width: screenWidth } = Dimensions.get('window')
 interface Props {
@@ -28,6 +29,7 @@ interface State {
     }[]
     loading: string,
     tab: number,    // 0 : 내꺼 , 1 : 남꺼
+    eventSelectedIdx: number,
 }
 
 
@@ -46,6 +48,7 @@ export default class CheckResult extends React.Component<Props, State>{
             status: [],
             loading : "init",
             tab : 0*/
+            eventSelectedIdx: 0,
         }
     }
 
@@ -228,7 +231,7 @@ export default class CheckResult extends React.Component<Props, State>{
                             </View>
 
                             <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                                <Button title="..." onPress={() => this.navigateToDetail(i)} />
+                                <Button title="..." onPress={() => this.handleEventDetail(i)} />
                             </View>
                         </View>
                     </View>
@@ -270,6 +273,7 @@ export default class CheckResult extends React.Component<Props, State>{
                         />
                     </View>
                     {showStructure}
+                    {this.eventSelectActionSheet}
                 </View>
                 </ScrollView>
 
@@ -277,6 +281,48 @@ export default class CheckResult extends React.Component<Props, State>{
 
         }
 
+    }
+
+    ActionSheet = {
+        eventSelect: null,
+    };
+
+    handleEventDetail = (eventSelectedIdx: number) => {
+        this.setState(
+            { eventSelectedIdx },
+            () => this.showActionSheet('eventSelect'),
+        );
+    }
+
+    /* ActionSheets */
+    showActionSheet = (sheet: string) => {
+        console.debug('show actionsheet ', sheet);
+        this.ActionSheet[sheet].show();
+    }
+
+    get eventSelectActionSheet() {
+        let options = ['자세히 보기'];
+        if (this.state.tab === 0) { // 내꺼
+            options.push('삭제');
+        } else {
+            options.push('숨기기');
+        }
+        const cancelIdx = options.length;
+        options.push('Cancel');
+
+        return (<ActionSheet
+            ref={sheet => this.ActionSheet.eventSelect = sheet}
+            title={'Option'}
+            options={options}
+            cancelButtonIndex={cancelIdx}
+            destructiveButtonIndex={cancelIdx - 1}
+            onPress={(index: number) => {
+                if (index == 0)
+                    this.navigateToDetail(this.state.eventSelectedIdx)
+                else if (index == 1) // 삭제 or 숨기기 
+                    console.debug('nothing implemented yet');
+            }}
+        />);
     }
 }
 
