@@ -27,7 +27,7 @@ export default class Account extends React.Component<Props, State> {
         point: 0,
         pushStatus: true
     };
-    pointHandler: number;
+    pointHandler;
     serverAddress = "http://localhost:3000";
     getUserAddress = this.serverAddress + "/users";
     userPatchAddress = this.serverAddress + "/users";
@@ -40,12 +40,16 @@ export default class Account extends React.Component<Props, State> {
         super(props);
         AsyncStorage.getItem("account").then((account) => {
             if (account) {
-                this.setState({ email: JSON.parse(account).email })
+                this.setState(
+                    { email: JSON.parse(account).email },
+                    () => {
+                        this.getPoint().then((point) => {
+                            AsyncStorage.setItem('point', JSON.stringify({ 'point': point }));
+                            this.setState({ point });
+                        });
+                    })
             }
         })
-
-        let point = this.getPoint();
-        var result = AsyncStorage.setItem('point', JSON.stringify({ 'point': point }));
     }
 
     async getPoint() {
@@ -72,6 +76,7 @@ export default class Account extends React.Component<Props, State> {
             try {
                 const curPoint = await this.getPoint();
                 AsyncStorage.setItem('point', JSON.stringify({ 'point': curPoint }));
+                this.setState({point:curPoint});
             }
             catch (err) {
                 console.error(err);
@@ -117,7 +122,7 @@ export default class Account extends React.Component<Props, State> {
         return (
             <View style={styles.container}>
                 <Text style={styles.ID}>ID: {this.state.email}</Text>
-                <Text style={styles.ID}>ID: {this.state.point}</Text>
+                <Text style={styles.ID}>Point: {this.state.point}</Text>
                 <RoundedButton
                     styleButton={styles.button}
                     onPress={this.logout}

@@ -187,6 +187,14 @@ exports.createVote = async (voter, eventId, photoId) => {
                 event.voters.push(voter);
                 event.save();
 
+                User.findOneAndUpdate({ id: voter }, { $inc: { 'point': 1 } },
+                    (err, doc, res) => {
+                        if (err) {
+                            reject('UserPointHandlingError');
+                        }
+                        console.debug(doc);
+                    });
+
                 resolve(data);
             }
         });
