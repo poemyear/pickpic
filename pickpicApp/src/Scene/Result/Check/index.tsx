@@ -243,7 +243,7 @@ export default class CheckResult extends React.Component<Props, State>{
                 <ScrollView>
                 <View>
                     <NavigationEvents
-                        //onWillFocus={this.fetchEvents}
+                        onWillFocus={this.fetchEvents}
                         // onDidFocus={payload => console.log('did focus')}
                         // onWillBlur={payload => console.log('will blur')}
                         // onDidBlur={payload => console.log('did blur')}
