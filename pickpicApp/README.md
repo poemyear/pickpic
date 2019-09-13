@@ -9,5 +9,7 @@
 - yarn add react-native-datepicker<br>
 - yarn add react-native-svg<br>
 - yarn add react-native-svg-charts<br>
+- yarn add react-native-root-toast<br>
+- yarn add react-native-actionsheet<br>
 ## Expo Packages
 - expo install permission<br>
