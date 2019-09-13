@@ -11,6 +11,7 @@ const { width: screenWidth } = Dimensions.get('window')
 import ActionSheet from 'react-native-actionsheet';
 import GenderPermisson, { getPermissionLabel, getPermissionLables, getPermissionValue } from '../../Component/GenderPermission';
 import Toast from 'react-native-root-toast';
+import DetailButton from '../../Component/DetailButton';
 
 
 interface Props {
@@ -88,7 +89,7 @@ export default class Upload extends React.Component<Props, State>{
             <Text style={styles.text}>{getPermissionLabel(this.state.genderPermission)}</Text>
             {/* <Text onPress={this.showActionSheet}>Open ActionSheet</Text> */}
             <View style={{ flex: 1, alignItems: 'flex-end', paddingHorizontal: 15 }}>
-              <Button title=":" onPress={() => this.showActionSheet('option')} />
+              <DetailButton onPress={()=>this.showActionSheet('option')}/>
             </View>
           </View>
           {this.optionsActionSheet}

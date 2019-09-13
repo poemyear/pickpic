@@ -3,6 +3,7 @@ import React from 'react'
 import SwitchButton from "../../../Component/SwitchButton.js"
 import { NavigationEvents } from 'react-navigation';
 import ActionSheet from 'react-native-actionsheet';
+import DetailButton from '../../../Component/DetailButton';
 
 const { width: screenWidth } = Dimensions.get('window')
 interface Props {
@@ -231,7 +232,7 @@ export default class CheckResult extends React.Component<Props, State>{
                             </View>
 
                             <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                                <Button title="..." onPress={() => this.handleEventDetail(i)} />
+                                <DetailButton onPress={()=>this.handleEventDetail(i)}/>
                             </View>
                         </View>
                     </View>
