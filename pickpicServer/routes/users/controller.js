@@ -56,7 +56,7 @@ exports.create = (req, res) => {
     let id = req.body.id;
     let password = req.body.password;
     /* TODO: Validation */
-    id.toLowerString();
+    id = id.toLowerCase();
     db.createUser(id, password)
         .then((result) => {
             console.log("result:" + result);
