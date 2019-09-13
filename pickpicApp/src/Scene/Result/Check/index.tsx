@@ -4,6 +4,7 @@ import SwitchButton from "../../../Component/SwitchButton.js"
 import { NavigationEvents } from 'react-navigation';
 import ActionSheet from 'react-native-actionsheet';
 import DetailButton from '../../../Component/DetailButton';
+import RoundedButton from '../../../Component/RoundedButton';
 
 const { width: screenWidth } = Dimensions.get('window')
 interface Props {
@@ -192,7 +193,7 @@ export default class CheckResult extends React.Component<Props, State>{
                 var sortStatusByCount = oriStatus.sort(function (a, b) {
                     return b.count - a.count;
                 });
-                sortedEvents.push({ eventId: event.eventId, title: event.title, status: sortStatusByCount });
+                sortedEvents.push({ eventId: event.eventId, title: event.title, status: event.status, result: sortStatusByCount });
             }
 
             var data_all = [];
@@ -203,7 +204,7 @@ export default class CheckResult extends React.Component<Props, State>{
                 var imageHeight = 160;
                 var imageWidth = 160;
 
-                for (let j of event.status) {
+                for (let j of event.result) {
                     var data_item = { id: j.photoId, uri: this.serverAddress + "/" + j.path };
                     data.push(data_item);
 
@@ -219,8 +220,21 @@ export default class CheckResult extends React.Component<Props, State>{
                 data_all.push(data);
                 showStructure.push(
                     <View key={event.eventId}>
-                        <View>
+                        <View style={{ flexDirection: 'row' }}>
+                            <View style={{ flex: 1, alignItems: 'flex-start', paddingHorizontal: 15 }}>
+                                <RoundedButton
+                                    title={event.status === 'voting' ? '투표중' : '만료'}
+                                    styleButton={{
+                                        backgroundColor: event.status === 'voting' ? 'rgba(240, 10, 10, 0.6)' : 'gray',
+                                        width: 50, height: 25, padding: 5, marginBottom: 0
+                                    }}
+                                    styleText={{ color: 'white', fontSize: 12 }}
+                                />
+                            </View>
                             <Text style={{ fontSize: 20 }}>{event.title} </Text>
+                            <View style={{ flex: 1, alignItems: 'flex-end', paddingHorizontal: 15 }}>
+                                <DetailButton onPress={() => this.handleEventDetail(i)} />
+                            </View>
                         </View>
                         <View style={{
                             flexDirection: 'row',
@@ -231,9 +245,7 @@ export default class CheckResult extends React.Component<Props, State>{
                                 {pasteData}
                             </View>
 
-                            <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                                <DetailButton onPress={() => this.handleEventDetail(i)} />
-                            </View>
+
                         </View>
                     </View>
 

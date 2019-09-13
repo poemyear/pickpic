@@ -20,7 +20,6 @@ interface Props {
         path: string,
         count: number,
         key: string,
-        // svg: any,
         thumbnailPath: string
     }[]
 }
