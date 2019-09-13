@@ -187,6 +187,14 @@ exports.createVote = async (voter, eventId, photoId) => {
                 event.voters.push(voter);
                 event.save();
 
+                User.findOneAndUpdate({ id: voter }, { $inc: { 'point': 1 } },
+                    (err, doc, res) => {
+                        if (err) {
+                            reject('UserPointHandlingError');
+                        }
+                        console.debug(doc);
+                    });
+
                 resolve(data);
             }
         });
@@ -236,11 +244,11 @@ exports.loginUser = (id,password) => {
         });
     })
 }
-exports.patchUser = (userId, patchData) => {
+exports.patchUser = (id, patchData) => {
     console.log("db.js - patchUser");
 
     return new Promise( ( resolve, reject ) => {
-        User.findOneAndUpdate({id: userId}, patchData, (err, result)=> {
+        User.findOneAndUpdate({id}, patchData, (err, result)=> {
             if( err ) reject( err );
             console.log(result);
             resolve( result );
