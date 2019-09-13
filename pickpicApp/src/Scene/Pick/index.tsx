@@ -1,10 +1,11 @@
 import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
-import { Button, Dimensions, StyleSheet, Image, View, Text, Platform, Animated } from 'react-native';
+import { Dimensions, StyleSheet, View, Text, Platform, Animated } from 'react-native';
 import React, { createRef } from 'react'
 import moment from 'moment';
 import { NavigationEvents } from 'react-navigation';
 import { getPermissionLabelByValue } from '../../Component/GenderPermission';
 import DetailButton from '../../Component/DetailButton';
+import RoundedButton from '../../Component/RoundedButton';
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -209,7 +210,7 @@ export default class Pick extends React.Component<Props, State>{
                         <Text style={[styles.text, { flex: 3 }]}>Expired {moment(event.expiredAt).fromNow()}</Text>
                         <Text style={styles.text}>{getPermissionLabelByValue(event.genderPermission)}</Text>
                         <View style={{ flex: 1, alignItems: 'flex-end', paddingHorizontal: 15 }}>
-                            <DetailButton onPress={() => {}} />
+                            <DetailButton onPress={() => { }} />
                         </View>
                     </View>
                 </View>
@@ -225,10 +226,12 @@ export default class Pick extends React.Component<Props, State>{
                     />
                     {this.renderOverlayHeart}
                 </View>
-                <View style={{ flex: 1, marginTop: 20, back:'black' }}>
-                    <Button
-                        title={'Pick'}
-                        onPress={this.likeAndVote} />
+                <View style={{ flex: 1, alignItems: 'center', marginTop: 20 }}>
+                    <RoundedButton
+                        title='Pick'
+                        styleButton={{ backgroundColor: 'rgba(20, 115, 250, 0.5)' }}
+                        styleText={{ fontWeight: 'bold', fontFamily: "Georgia", color: 'white' }}
+                    />
                 </View>
             </View>
         );

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Alert, Button, Text, TouchableOpacity, TextInput, View, StyleSheet } from 'react-native';
+import { Alert, Text, TextInput, View, StyleSheet } from 'react-native';
 import {
     ActivityIndicator,
     AsyncStorage,
@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { NavigationActions } from 'react-navigation'
 import Sha256 from '../../Component/Sha256'
+import RoundedButton from '../../Component/RoundedButton';
 
 interface Props {
     navigation: any
@@ -95,20 +96,18 @@ export default class SignIn extends React.Component<Props, State> {
                     placeholderTextColor='grey'
                     style={styles.input}
                 />
-
-                <TouchableOpacity
-                    style={styles.button}
+                 <RoundedButton
+                    styleButton={styles.button}
                     onPress={this.onLogin.bind(this)}
-                >
-                    <Text style={styles.buttonText}>로그인</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.button}
+                    title='로그인'
+                    styleText={styles.buttonText}
+                />
+                 <RoundedButton
+                    styleButton={styles.button}
                     onPress={this.switchSignUp.bind(this)}
-                >
-                    <Text style={styles.buttonText}>간편 회원가입</Text>
-                </TouchableOpacity>
-
+                    title='간편 회원가입'
+                    styleText={styles.buttonText}
+                />
             </View>
         );
     }

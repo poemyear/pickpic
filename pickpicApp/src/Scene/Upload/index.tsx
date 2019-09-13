@@ -12,6 +12,7 @@ import ActionSheet from 'react-native-actionsheet';
 import GenderPermisson, { getPermissionLabel, getPermissionLables, getPermissionValue } from '../../Component/GenderPermission';
 import Toast from 'react-native-root-toast';
 import DetailButton from '../../Component/DetailButton';
+import RoundedButton from '../../Component/RoundedButton';
 
 
 interface Props {
@@ -70,7 +71,7 @@ export default class Upload extends React.Component<Props, State>{
   componentDidMount() {
     this.getPermissionAsync();
   }
-  
+
   render() {
     let { imageInfos: imageInfos } = this.state;
 
@@ -89,7 +90,7 @@ export default class Upload extends React.Component<Props, State>{
             <Text style={styles.text}>{getPermissionLabel(this.state.genderPermission)}</Text>
             {/* <Text onPress={this.showActionSheet}>Open ActionSheet</Text> */}
             <View style={{ flex: 1, alignItems: 'flex-end', paddingHorizontal: 15 }}>
-              <DetailButton onPress={()=>this.showActionSheet('option')}/>
+              <DetailButton onPress={() => this.showActionSheet('option')} />
             </View>
           </View>
           {this.optionsActionSheet}
@@ -109,9 +110,16 @@ export default class Upload extends React.Component<Props, State>{
             hasParallaxImages={true}
           />
         </View>
-        <View style={{ flex: 1, marginTop: 20 }}>
-          {imageInfos &&
-            <Button title="Event 생성" onPress={this.sendImage} />}
+        <View style={{ flex: 1, alignItems: 'center', marginTop: 20 }}>
+          {
+            imageInfos &&
+            <RoundedButton
+              title='Event 생성'
+              styleButton={{ backgroundColor: 'rgba(30, 220, 20, 0.5)' }}
+              styleText={{ fontWeight: 'bold', fontFamily: "Georgia", color: 'white' }}
+              onPress={this.sendImage}
+            />
+          }
         </View>
       </View >
     );
@@ -151,7 +159,7 @@ export default class Upload extends React.Component<Props, State>{
 
   /* ActionSheets */
   showActionSheet = (sheet: string) => {
-    console.debug('show actionsheet ', sheet); 
+    console.debug('show actionsheet ', sheet);
     this.ActionSheet[sheet].show();
   }
 
@@ -196,7 +204,7 @@ export default class Upload extends React.Component<Props, State>{
       expiredDate: moment().add(this.state.dateDurationAmount, this.state.dateDurationUnit).toDate(),
     });
   }
-  
+
   setDuration = (dateDurationAmount, dateDurationUnit) => {
     this.setState({
       dateDurationAmount,
@@ -259,32 +267,32 @@ export default class Upload extends React.Component<Props, State>{
   }
 
   /* Toast */
-  showToast = (message:string) => {
+  showToast = (message: string) => {
     if (!this.state.toastVisible)
-    Toast.show(message, {
-      duration: 1000,
-      // duration: Toast.durations.SHORT,
-      position: 750,
-      // position: Toast.positions.CENTER,
-      shadow: true,
-      animation: true,
-      hideOnPress: true,
-      delay: 0,
-      onShow: () => {
-        this.setState({toastVisible:true})
+      Toast.show(message, {
+        duration: 1000,
+        // duration: Toast.durations.SHORT,
+        position: 750,
+        // position: Toast.positions.CENTER,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        onShow: () => {
+          this.setState({ toastVisible: true })
           // calls on toast\`s appear animation start
-      },
-      onShown: () => {
+        },
+        onShown: () => {
           // calls on toast\`s appear animation end.
-      },
-      onHide: () => {
+        },
+        onHide: () => {
           // calls on toast\`s hide animation start.
-      },
-      onHidden: () => {
-        this.setState({toastVisible:false})
+        },
+        onHidden: () => {
+          this.setState({ toastVisible: false })
           // calls on toast\`s hide animation end.
-      }
-  });
+        }
+      });
   }
 
   /* Permissions */
