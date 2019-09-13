@@ -236,11 +236,11 @@ exports.loginUser = (id,password) => {
         });
     })
 }
-exports.patchUser = (id, patchData) => {
+exports.patchUser = (userId, patchData) => {
     console.log("db.js - patchUser");
 
     return new Promise( ( resolve, reject ) => {
-        User.findOneAndUpdate({id}, patchData, (err, result)=> {
+        User.findOneAndUpdate({id: userId}, patchData, (err, result)=> {
             if( err ) reject( err );
             console.log(result);
             resolve( result );

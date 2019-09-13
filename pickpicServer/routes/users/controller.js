@@ -3,17 +3,22 @@ const db = require('../db');
 
 // /db.connect();
 
+validatePatch = (field, input, output) => {
+    if (input.hasOwnProperty(field))
+        output[field] = input[field];
+}
+
 exports.patch = (req, res) => {
     console.log("controller.js - patch");
-    var patchData = {}
-    if( req.body.hasOwnProperty('pushStatus') ) {
-        patchData['patchStatus'] = req.body.pushStatus;
-    }
-    console.log(patchData);
-    return db.patchUser(req.body.id, patchData)
+    const userId = req.body.id;
+    let patchData = {}
+    validatePatch('pushStatus', req.body, patchData);
+    console.debug('patchData: ', patchData);
+
+    return db.patchUser(userId, patchData)
         .then((result) => {
-            console.log(result);
-            res.send(result);
+            console.log(result); // patch 되기 전 result
+            res.status(204).send();
         }).catch((err) => {
             console.log(err);
             res.status(400).json({error: 'Patch Error'});
