@@ -48,7 +48,11 @@ exports.show = (req, res) => {
 
 exports.create = (req, res) => {
     console.log("controller.js - create");
-    db.createUser(req.body.id, req.body.password)
+    let id = req.body.id;
+    let password = req.body.password;
+    /* TODO: Validation */
+    id.toLowerString();
+    db.createUser(id, password)
         .then((result) => {
             console.log("result:" + result);
             res.status(200).send(result);

@@ -6,6 +6,7 @@ import {
     StatusBar,
 } from 'react-native';
 import { NavigationActions } from 'react-navigation'
+import Sha256 from '../../Component/Sha256'
 
 interface Props {
     navigation: any
@@ -35,7 +36,7 @@ export default class SignIn extends React.Component<Props, State> {
             }    
         })
     }
-    SignInRequest = async ( email, password ) => {
+    SignInRequest = async ( email:string, password:string ) => {
         var response = await fetch(this.LoginRoutes, {
             method: 'post',
             headers: {
@@ -44,7 +45,7 @@ export default class SignIn extends React.Component<Props, State> {
             },
             body: JSON.stringify({
                 'id': email,
-                'password': password
+                'password': Sha256(password)
             })
         });
         if (!response.ok) 
@@ -81,14 +82,14 @@ export default class SignIn extends React.Component<Props, State> {
                 <TextInput
                     value={this.state.email}
                     keyboardType='email-address'
-                    onChangeText={(email) => this.setState({ email })}
+                    onChangeText={(email:string) => this.setState({ email: email.toLowerCase() })}
                     placeholder='email'
                     placeholderTextColor='grey'
                     style={styles.input}
                 />
                 <TextInput
                     value={this.state.password}
-                    onChangeText={(password) => this.setState({ password })}
+                    onChangeText={(password:string) => this.setState({ password })}
                     placeholder={'password'}
                     secureTextEntry={true}
                     placeholderTextColor='grey'
