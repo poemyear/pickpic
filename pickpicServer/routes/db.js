@@ -274,11 +274,11 @@ exports.deleteUser = async (id) => {
 
 /* TODO: */
 
-exports.deleteEvent = async (id) => {
+exports.deleteEvent = async (owner, eventId) => {
     console.log("db.js - deleteEvent");
 
     var ret;
-    ret = await Event.remove({id: id}, (error, output) => {
+    ret = await Event.deleteOne({_id: eventId, owner:owner}, (error) => {
         if (error) {
             console.log(error);
         }
