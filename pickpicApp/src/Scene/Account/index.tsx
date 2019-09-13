@@ -67,12 +67,12 @@ export default class Account extends React.Component<Props, State> {
 
     pointOnChange = async () => {
         var point = await AsyncStorage.getItem("point");
+        console.log('point : ' + point ); 
         if( point && JSON.parse(point).point != this.state.point ) 
         {
             try {
                 const curPoint = await this.getPoint(); 
-                console.log(curPoint);
-                AsyncStorage.setItem("point", curPoint);
+                AsyncStorage.setItem('point', JSON.stringify({'point':curPoint}));
             }
             catch(err){
                 console.error(err); 
