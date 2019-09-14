@@ -3,7 +3,7 @@ import { AsyncStorage, Button, Dimensions, StyleSheet, Image, View, Text, Platfo
 import React, { createRef } from 'react'
 import moment from 'moment';
 import { NavigationEvents } from 'react-navigation';
-import registerForPushNotificationsAsync from '../../Component/pushNotification';
+// import registerForPushNotificationsAsync from '../../Component/pushNotification';
 import config from '../../Component/config';
 import { getPermissionLabelByValue } from '../../Component/GenderPermission';
 import DetailButton from '../../Component/DetailButton';
@@ -148,7 +148,7 @@ export default class Pick extends React.Component<Props, State>{
         AsyncStorage.getItem("account").then((account) => {
             if (account){
                 this.setState({email:JSON.parse(account).email})
-                registerForPushNotificationsAsync(this.state.email);
+                // registerForPushNotificationsAsync(this.state.email);
             }    
         });
     }

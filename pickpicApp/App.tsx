@@ -53,7 +53,7 @@ export default class App extends React.Component<Props, States> {
   render() {
     const { theme, currentTheme, isReady } = this.state;
     if (!isReady) {
-      return <AppLoading />;
+      return (<View></View>);
     }
     return <AppNavigator/>;
   }
