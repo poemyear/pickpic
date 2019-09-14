@@ -1,4 +1,4 @@
-import { Button, Dimensions, StyleSheet, View, Image, Text, Platform, Switch, ScrollView, Alert } from 'react-native';
+import { Button, Dimensions, StyleSheet, View, Image, Text, Platform, Switch, ScrollView, Alert, FlatList } from 'react-native';
 import React from 'react'
 import SwitchButton from "../../../Component/SwitchButton.js"
 import { NavigationEvents } from 'react-navigation';
@@ -34,6 +34,7 @@ interface State {
     loading: string,
     tab: number,    // 0 : 내꺼 , 1 : 남꺼
     eventSelectedIdx: number,
+    fetchCnt : number
 }
 
 
@@ -53,12 +54,13 @@ export default class CheckResult extends React.Component<Props, State>{
             loading : "init",
             tab : 0*/
             eventSelectedIdx: 0,
+            fetchCnt : 0
         }
     }
 
     checkingEventsOfMine = async () => {
         const userId = "bakyuns";
-        const checkingMyResult = this.eventRoute + "/myEvents/" + userId;
+        const checkingMyResult = this.eventRoute + "/myEvents/" + userId + '/' + this.state.fetchCnt;
         //const checkingMyResult = this.eventRoute;
 
         let responseJson = await (await fetch(checkingMyResult)).json();
@@ -73,7 +75,7 @@ export default class CheckResult extends React.Component<Props, State>{
 
     checkingEventsbyMe = async () => {
         const userId = "bakyuns";
-        const checkingOtherResult = this.eventRoute + "/myPicks/" + userId;
+        const checkingOtherResult = this.eventRoute + "/myPicks/" + userId + '/' + this.state.fetchCnt;
         //const checkingOtherResult = this.eventRoute;
 
         let responseJson = await (await fetch(checkingOtherResult)).json();
@@ -146,6 +148,7 @@ export default class CheckResult extends React.Component<Props, State>{
     async changedTab() {
         console.log("ChangedTab Entrance");
         console.log("tab : " + this.state.tab);
+        this.showStructure = [];
         try {
             if (this.state.tab === 0) {
                 let event = await this.checkingEventsOfMine();
@@ -176,7 +179,24 @@ export default class CheckResult extends React.Component<Props, State>{
         //this.setState({})
     }
 
+    handleLoadMore = () =>{
+        this.setState({
+            fetchCnt : this.state.fetchCnt + 2
+        }, this.fetchEvents);
+        console.log("++++++" + this.state.fetchCnt);
+    }
 
+    _renderItem = ({item}) => {
+        console.log("hoho")
+        return (
+            <View>
+                {this.showStructure}
+            </View>
+        )
+    }
+
+    index = 0;
+    showStructure = [];
     cnt = 0;
     render() {
         console.log("Check Result Render", this.cnt);
@@ -200,7 +220,7 @@ export default class CheckResult extends React.Component<Props, State>{
             }
 
             var data_all = [];
-            var showStructure = [];
+            //var showStructure = [];
             sortedEvents.forEach((event, i) => {
                 var data = [];
                 var pasteData = [];
@@ -221,8 +241,9 @@ export default class CheckResult extends React.Component<Props, State>{
                     imageWidth -= 40;
                 }
                 data_all.push(data);
-                showStructure.push(
-                    <View key={event.eventId}>
+                this.index++;
+                this.showStructure.push(
+                    <View key={this.index}>
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1, alignItems: 'flex-start', paddingHorizontal: 15 }}>
                                 <RoundedButton
@@ -259,7 +280,6 @@ export default class CheckResult extends React.Component<Props, State>{
 
             console.log("---------------- tab : ", this.state.tab);
             return (
-                <ScrollView>
                     <View>
                         <NavigationEvents
                             onWillFocus={this.fetchEvents}
@@ -288,10 +308,16 @@ export default class CheckResult extends React.Component<Props, State>{
                                 activeFontColor='#fff'            // optional: active font color --- default #fff
                             />
                         </View>
-                        {showStructure}
                         {this.eventSelectActionSheet}
+                        <FlatList
+                        data = {this.showStructure}
+                        onEndReached={this.handleLoadMore}
+                        onEndReachedThreshold={0}
+                        renderItem={this._renderItem}
+                        keyExtractor={(item, index)=>index.toString()}
+                        />
                     </View>
-                </ScrollView>
+                
 
             );
 

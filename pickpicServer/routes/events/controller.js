@@ -103,7 +103,7 @@ exports.showMyEvents = (req, res) => {
     // if (!id) {
     //     return res.status(400).json({error: 'Invalid id'});
     // }
-    db.fetchMyEvents(req.params.userId)
+    db.fetchMyEvents(req.params.userId, req.params.cnt)
         .then((result) => {
             res.send(result);
         }).catch((err) => {
@@ -118,7 +118,7 @@ exports.showMyPicks = (req, res) => {
     // if (!id) {
     //     return res.status(400).json({error: 'Invalid id'});
     // }
-    db.fetchMyPicks(req.params.userId)
+    db.fetchMyPicks(req.params.userId, req.params.cnt)
         .then((result) => {
             res.send(result);
         }).catch((err) => {
