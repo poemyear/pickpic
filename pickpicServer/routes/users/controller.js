@@ -2,40 +2,46 @@
 const db = require('../db');
 
 // /db.connect();
-
-changeUserInfo = (req, res, patchData) => {
-    return db.patchUser(req.params.id, patchData)
+changeUserInfo = (req, res, changeData) => {
+    return db.patchUser(req.params.id, changeData)
         .then((result) => {
             console.log(result);
-            res.send(result);
+            res.status(200).send(result);
         }).catch((err) => {
             console.log(err);
             res.status(400).json({error: 'Patch Error'});
         });
 }
 
-appendInfoToUser = (req, res, appendData) => {
-    return db.appendInfoToUser(appendData)
-        .then((result) => {
-            console.log(result);
-            res.send(result);
-        }).catch((err) => {
-            console.log(err);
-            res.status(400).json({error: 'Patch Error'});
-        });
+validAndPatch= (field, validateFunc, input, output) => {
+    if (input.hasOwnProperty(field) ) {
+        if (validateFunc(input[field]))
+            output[field] = input[field];
+    }
+}
+
+validateToken = (input) => {
+    if( typeof(input) != "string" )
+        return false;
+    return true;
+}
+
+validatePushStatus = (input) => {
+    if( typeof(input) != "boolean" )
+        return false;
+    return true;
 }
 
 exports.patch = (req, res) => {
     console.log("controller.js - patch");
     var patchData = {};
-    if( req.body.hasOwnProperty('token') ) {
-        appendData['token'] = req.body.token;
-        appendInfoToUser( req, res, appendData );
-    }
-    if( req.body.hasOwnProperty('pushStatus') ) {
-        patchData['patchStatus'] = req.body.pushStatus;
-        changeUserInfo( req, res, patchData );
-    }
+    var appendData = {};
+
+    validAndPatch( 'token', validateToken, req.body, appendData );
+    validAndPatch( 'pushStatus', validatePushStatus, req.body, patchData );
+
+    const changeData = {$push:appendData, $set:patchData};
+    changeUserInfo( req, res, changeData );
 }
 
 exports.index = (req, res) => {
@@ -59,14 +65,18 @@ exports.show = (req, res) => {
         .then((result)=> {
             res.send(result);
         }).catch((err) => {
-            console.error(err);
-            res.status(400).json({error: 'Invalid id'});
-        });
+        console.error(err);
+        res.status(400).json({error: 'Invalid id'});
+    });
 };
 
 exports.create = (req, res) => {
     console.log("controller.js - create");
-    db.createUser(req.body.id, req.body.password)
+    let id = req.body.id;
+    let password = req.body.password;
+    /* TODO: Validation */
+    id = id.toLowerCase();
+    db.createUser(id, password)
         .then((result) => {
             console.log("result:" + result);
             res.status(200).send(result);

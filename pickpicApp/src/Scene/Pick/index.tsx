@@ -5,6 +5,9 @@ import moment from 'moment';
 import { NavigationEvents } from 'react-navigation';
 import registerForPushNotificationsAsync from '../../Component/pushNotification';
 import config from '../../Component/config';
+import { getPermissionLabelByValue } from '../../Component/GenderPermission';
+import DetailButton from '../../Component/DetailButton';
+import RoundedButton from '../../Component/RoundedButton';
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -17,6 +20,7 @@ interface State {
         id: string,
         title: string,
         expiredAt: Date,
+        genderPermission: string,
         photos: {
             id: string,
             uri: string
@@ -119,6 +123,7 @@ export default class Pick extends React.Component<Props, State>{
         let photos = [];
         const title = responseJson.title;
         const expiredAt = new Date(responseJson.expiredAt);
+        const genderPermission = responseJson.genderPermission;
 
         for (let i = 0; i < responseJson.photos.length; i++) {
             const info = responseJson.photos[i];
@@ -126,7 +131,7 @@ export default class Pick extends React.Component<Props, State>{
             const uri = this.serverAddress + "/" + info.path;
             photos.push({ id: photoId, uri });
         }
-        return { id: eventId, title, expiredAt, photos };
+        return { id: eventId, title, expiredAt, genderPermission, photos };
     }
 
     async componentDidMount() {
@@ -199,21 +204,27 @@ export default class Pick extends React.Component<Props, State>{
         );
     }
     render() {
-        let event = { id: '', title: '', photos: [], expiredAt: null };
+        let event = { id: '', title: '', photos: [], genderPermission: '', expiredAt: null };
         if (this.state.eventIdx >= 0) {
             event = this.state.events[this.state.eventIdx];
         }
         return (
             <View style={{ flex: 1 }}>
+                <Text style={styles.text}>Current UserId: {this.userId}</Text>
                 <NavigationEvents
                     onWillFocus={() => this.fetchEvents}
                 />
-                <View style={{ flex:1, marginTop: 20 }}>
-                    <Text style={styles.text}>Current UserId: {this.userId}</Text>
-                    <Text style={styles.text}>Expired {moment(event.expiredAt).fromNow()}</Text>
-                    <Text style={styles.title}>{event.title}</Text>
+                <View style={{ flex: 1, marginTop: 20 }}>
+                    <Text style={styles.title}> {event.title} </Text>
+                    <View style={{ flexDirection: 'row' }}>
+                        <Text style={[styles.text, { flex: 3 }]}>Expired {moment(event.expiredAt).fromNow()}</Text>
+                        <Text style={styles.text}>{getPermissionLabelByValue(event.genderPermission)}</Text>
+                        <View style={{ flex: 1, alignItems: 'flex-end', paddingHorizontal: 15 }}>
+                            <DetailButton onPress={() => { }} />
+                        </View>
+                    </View>
                 </View>
-            <View style={{height:screenWidth}}>
+                <View style={{ height: screenWidth }}>
                     <Carousel
                         ref={this.carouselRef}
                         sliderWidth={screenWidth}
@@ -224,12 +235,15 @@ export default class Pick extends React.Component<Props, State>{
                         hasParallaxImages={true}
                     />
                     {this.renderOverlayHeart}
-                    </View>
-            <View style={{flex:1}}>
-                    <Button
-                        title={'Pick'}
-                        onPress={this.likeAndVote} />
-                    </View>
+                </View>
+                <View style={{ flex: 1, alignItems: 'center', marginTop: 20 }}>
+                    <RoundedButton
+                        title='Pick'
+                        onPress={this.vote}
+                        styleButton={{ backgroundColor: 'rgba(20, 115, 250, 0.5)' }}
+                        styleText={{ fontWeight: 'bold', fontFamily: "Georgia", color: 'white' }}
+                    />
+                </View>
             </View>
         );
     }
@@ -259,7 +273,7 @@ const styles = StyleSheet.create({
         textAlign: 'center'
     },
     text: {
-        margin:10,
+        margin: 10,
         fontSize: 14,
         textAlign: 'right'
     },
@@ -267,10 +281,10 @@ const styles = StyleSheet.create({
         position: 'absolute',
         alignItems: 'center',
         justifyContent: 'center',
-        left: screenWidth/2,
-        right: screenWidth/2,
-        top: screenWidth/2,
-        bottom: screenWidth/2,
+        left: screenWidth / 2,
+        right: screenWidth / 2,
+        top: screenWidth / 2,
+        bottom: screenWidth / 2,
     },
     overlayHeart: {
         tintColor: '#fff',

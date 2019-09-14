@@ -7,6 +7,7 @@ import { RaisedTextButton } from 'react-native-material-buttons';
 import { NavigationActions } from 'react-navigation'
 import { any } from 'prop-types';
 import config from '../../Component/config';
+import Sha256 from '../../Component/Sha256'
 
 interface State {
   errors?: any;
@@ -78,7 +79,8 @@ export default class SignUp extends React.Component<Props, State> {
         }
       });
   }
-  SignUpRequest = async (email, password) => {
+
+  SignUpRequest = async (email:string, password:string) => {
     console.log(email, password);
     var response = await fetch(this.createUserRoute, {
       method: 'post',
@@ -87,8 +89,8 @@ export default class SignUp extends React.Component<Props, State> {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        'id': email,
-        'password': password
+        'id': email.toLowerCase(),
+        'password': Sha256(password)
       })
     });
     

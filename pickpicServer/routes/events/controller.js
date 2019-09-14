@@ -157,16 +157,15 @@ exports.update = (req, res) => {
 
 exports.destroy = (req, res) => {
     console.log("controller.js - destroy");
-    const id = parseInt(req.params.id, 10);
-    if (!id) {
-        return res.status(400).json({ error: 'Incorrect id' });
-    }
 
-    db.deleteEvent(id).then((result) => {
-        if (result == id) {
+    const userId = req.headers.userid;
+    const eventId = req.body.eventId;
+
+    db.deleteEvent(userId, eventId).then((result) => {
+        if (result) {
             res.status(204).send();
         } else {
-            res.status(400).json({ error: 'Invalid id' });
+            res.status(400).json({ error: 'Invalid request' });
         }
     })
 };

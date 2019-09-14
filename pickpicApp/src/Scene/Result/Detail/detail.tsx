@@ -1,7 +1,7 @@
-import { Button, Image, Dimensions, StyleSheet, View, Text, Platform, ProgressViewIOSComponent, ScrollView } from 'react-native';
+import { Image, Dimensions, StyleSheet, View, Text, Modal } from 'react-native';
 import React from 'react'
-import { BarChart, Grid, YAxis } from 'react-native-svg-charts'
-import { Defs, LinearGradient, Text as SvgText, Image as SvgImage, Stop } from "react-native-svg";
+import { BarChart, YAxis } from 'react-native-svg-charts'
+import { Text as SvgText, Image as SvgImage, Stop } from "react-native-svg";
 import * as scale from 'd3-scale'
 import { PieChart } from 'react-native-svg-charts'
 import { Circle, G, Line } from 'react-native-svg'
@@ -21,8 +21,8 @@ interface Props {
         path: string,
         count: number,
         key: string,
-        // svg: any,
         thumbnailPath: string
+        imagePath: string
     }[]
 }
 interface State {
@@ -32,9 +32,12 @@ interface State {
         count: number,
         percent: string,
         key: string,
-        svg: { fill: string },
-        thumbnailPath: string
-    }[]
+        svg: { fill: string, onPressIn: any, onPressOut: any },
+        thumbnailPath: string,
+        imagePath: string
+    }[],
+    modalVisible: boolean,
+    modalImagePath: string,
 }
 
 export default class Detail extends React.Component<Props, State>{
@@ -44,23 +47,114 @@ export default class Detail extends React.Component<Props, State>{
     constructor(props: Props) {
         super(props);
         const randomColor = () => {
-            return { fill: ('#' + (Math.random() * 0xFFFFFF << 0).toString(16) + '000000').slice(0, 7) };
+            return ('#' + (Math.random() * 0xFFFFFF << 0).toString(16) + '000000').slice(0, 7);
         }
         let data = [];
-        console.log(this.props.eventTotalVote);
-        this.props.eventResult.map(result => data.push({ ...result, svg: randomColor(), percent: (result.count * 100 / this.props.eventTotalVote).toPrecision(2) + "%" }));
-        this.state = { data };
+        this.props.eventResult.map(result => data.push({
+            ...result,
+            svg: {
+                fill: randomColor(),
+                onPressIn: () => { this.setState({ modalVisible: true, modalImagePath: result.imagePath }) },
+                onPressOut: () => { this.setState({ modalVisible: false, modalImagePath: null }) }
+            },
+            percent: (result.count * 100 / this.props.eventTotalVote).toPrecision(2) + "%"
+        }));
+
+        this.state = { data, modalVisible: false, modalImagePath: null };
     }
 
     render() {
-        const Gradient = () => (
-            <Defs key={'gradient'}>
-                <LinearGradient id={'gradient'} x1={'0%'} y1={'0%'} x2={'100%'} y2={'0%'}>
-                    <Stop offset={'0%'} stopColor={'rgb(134, 65, 244)'} />
-                    <Stop offset={'100%'} stopColor={'rgb(66, 194, 244)'} />
-                </LinearGradient>
-            </Defs>
+        const srcData = this.state.data;
+        let barFlex = srcData.length;
+        let pieFlex = 5;
+
+        return (
+            <View style={{ flex: 1 }}>
+                <View style={styles.eventInfoContainer}>
+                    <Text style={styles.title}>{this.props.eventTitle}</Text>
+                    <Text> CreatedAt: {this.props.eventCreatedAt} </Text>
+                    <Text> ExpiredAt: {this.props.eventExpiredAt} </Text>
+                    <Text> Expired {moment(this.props.eventExpiredAt).fromNow()}</Text>
+                </View>
+                <View style={{ flex: barFlex, flexDirection: "row", }}>
+                    {this.renderYaxis}
+                    {this.renderBarChart}
+                </View>
+                <Text style={{ textAlign: 'center', color: 'gray' }}> 차트를 터치하면 사진이 확대됩니다. </Text>
+                <View style={{ flex: pieFlex }}>
+                    {this.renderPieChart}
+                </View>
+                {this.modalPressInImageVIew}
+            </View>
+        );
+    }
+
+    get renderYaxis() {
+        const srcData = this.state.data;
+
+        return (<YAxis
+            style={{ width: 10 }}
+            data={srcData}
+            yAccessor={({ index }) => index}
+            scale={scale.scaleBand}
+            contentInset={{ top: 10, bottom: 10 }}
+            // contentInset={{ top: 10, bottom: 10, left:100, right:100 }}
+            spacing={0.2}
+            formatLabel={(_, index) => srcData[index].key}
+        />);
+    }
+
+    get renderBarChart() {
+        const srcData = this.state.data;
+
+        const Thumbnails = ({ x, y, bandwidth, data }) => (
+            data.map((value, index) => (
+                <SvgImage
+                    key={this.props.eventId + index}
+                    x={x(value.count) + 10}
+                    y={y(index)}
+                    width={bandwidth}
+                    height={bandwidth}
+                    preserveAspectRatio="none"
+                    opacity="1"
+                    href={{ uri: this.serverAddress + "/" + value.thumbnailPath }}
+                />
+            ))
         )
+        const Labels = ({ x, y, bandwidth, data }) => (
+            data.map((value, index) => (
+                <SvgText
+                    key={index}
+                    x={x(0) + 10}
+                    y={y(index) + (bandwidth / 2)}
+                    fontSize={14}
+                    fill={'white'}
+                    alignmentBaseline={'middle'}
+                >
+                    {value.count}
+                </SvgText>
+            ))
+        )
+
+        return (
+            <BarChart
+                style={{ flex: 8, marginLeft: 10 }}
+                data={srcData}
+                horizontal={true}
+                yAccessor={({ item }) => item.count}
+                contentInset={{ right: 100 }}
+                spacing={0.2}
+                animate={true}
+                animationDuration={500}
+                gridMin={0}
+            >
+                <Thumbnails bandwidth={20} data={srcData} />
+                <Labels bandwidth={10} data={srcData} />
+            </BarChart>);
+    }
+
+    get renderPieChart() {
+        const srcData = this.state.data;
 
         const PieLabels = ({ slices }) => {
             return slices.map((slice, index) => {
@@ -110,95 +204,55 @@ export default class Detail extends React.Component<Props, State>{
             })
         }
 
-        const Thumanails = ({ x, y, bandwidth, data }) => (
-            data.map((value, index) => (
-                <SvgImage
-                    key={this.props.eventId + index}
-                    x={x(value.count) + 10}
-                    y={y(index)}
-                    width={bandwidth}
-                    height={bandwidth}
-                    preserveAspectRatio="none"
-                    opacity="1"
-                    href={{ uri: this.serverAddress + "/" + value.thumbnailPath }}
-                />
-            ))
-        )
-        const Lables = ({ x, y, bandwidth, data }) => (
-            data.map((value, index) => (
-                <SvgText
-                    key={index}
-                    x={x(0) + 10}
-                    y={y(index) + (bandwidth / 2)}
-                    fontSize={14}
-                    fill={'white'}
-                    alignmentBaseline={'middle'}
-                >
-                    {value.count}
-                </SvgText>
-            ))
-        )
-
-        const srcData = this.state.data;
-
-        this.props.eventResult.map
-        let barFlex = srcData.length;
-        let pieFlex = 5;
         return (
-            <View style={{ flex: 1 }}>
-                <View style={styles.eventInfoContainer}>
-                    <Text style={styles.title}>{this.props.eventTitle}</Text>
-                    <Text> CreatedAt: {this.props.eventCreatedAt} </Text>
-                    <Text> ExpiredAt: {this.props.eventExpiredAt} </Text>
-                    <Text> Expired {moment(this.props.eventExpiredAt).fromNow()}</Text>
-                </View>
-                <View style={{ flex: barFlex, flexDirection: "row", }}>
-                    <YAxis
-                        style={{ width: 10 }}
-                        data={srcData}
-                        yAccessor={({ index }) => index}
-                        scale={scale.scaleBand}
-                        contentInset={{ top: 10, bottom: 10 }}
-                        // contentInset={{ top: 10, bottom: 10, left:100, right:100 }}
-                        spacing={0.2}
-                        formatLabel={(_, index) => srcData[index].key}
+            <PieChart
+                style={{ flex: 1 }}
+                data={srcData}
+                valueAccessor={({ item }) => item.count}
+                outerRadius={'75%'}
+                innerRadius={'20%'}
+                labelRadius={'90%'}
+            >
+                <PieLabels slices={srcData} />
+            </PieChart>);
+    }
+
+    /* Modal */
+    handleModalClose = () => {
+        this.setState({
+            modalVisible: false,
+        });
+    }
+
+    get modalPressInImageVIew() {
+        const modalImagePath = this.state.modalImagePath;
+        return (
+            { modalImagePath } &&
+            <Modal
+                animationType='none'
+                transparent={true}
+                visible={this.state.modalVisible}
+                onRequestClose={this.handleModalClose}
+            >
+                <View style={[styles.overlay]}>
+                    <Image
+                        key={this.props.eventId + 123}
+                        style={{ width: screenWidth - 30, height: screenWidth - 30 }}
+                        source={{ uri: this.serverAddress + "/" + modalImagePath }}
                     />
-                    <BarChart
-                        style={{ flex: 8, marginLeft: 10 }}
-                        data={srcData}
-                        horizontal={true}
-                        yAccessor={({ item }) => item.count}
-                        contentInset={{ right: 100 }}
-                        spacing={0.2}
-                        animate={true}
-                        animationDuration={500}
-                        gridMin={0}
-                    >
-                        {/* <Grid direction={Grid.Direction.VERTICAL}/> */}
-                        <Thumanails bandwidth={20} data={srcData} />
-                        <Lables bandwidth={10} data={srcData} />
-
-                    </BarChart>
                 </View>
-                <View style={{ flex: pieFlex }}>
-                    <PieChart
-                        style={{ flex: 1 }}
-                        data={srcData}
-                        valueAccessor={({ item }) => item.count}
-                        outerRadius={'75%'}
-                        innerRadius={'20%'}
-                        labelRadius={'90%'}
-                    >
-                        <PieLabels slices={srcData} />
-                    </PieChart>
-                </View>
-            </View>
+            </Modal>
         );
-
     }
 }
 
 const styles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,.3)',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
     eventInfoContainer: {
         height: "15%",
     },

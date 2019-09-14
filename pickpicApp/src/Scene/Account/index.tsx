@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Alert, Button, Text, TouchableOpacity, TextInput, View, StyleSheet } from 'react-native';
+import {  Text, View, StyleSheet } from 'react-native';
 import {
     ActivityIndicator,
     AsyncStorage,
@@ -11,6 +11,7 @@ import ToggleSwitch from 'toggle-switch-react-native'
 import SignUp from './../Signup'
 import { getPlatformOrientationLockAsync } from 'expo/build/ScreenOrientation/ScreenOrientation';
 import config from '../../Component/config';
+import RoundedButton from '../../Component/RoundedButton';
 
 interface Props {
     navigation: any
@@ -22,12 +23,12 @@ interface State {
 }
 
 export default class Account extends React.Component<Props, State> {
-    state:State = {
+    state: State = {
         email: '',
         point: 0,
-        pushStatus: true 
+        pushStatus: true
     };
-    pointHandler:number;
+    pointHandler;
     serverAddress = config.getConfig('serverAddress');
     getUserAddress = this.serverAddress + "/users";
     userPatchAddress = this.serverAddress + "/users";
@@ -36,51 +37,54 @@ export default class Account extends React.Component<Props, State> {
         header: null,
     };
 
-    constructor(props:Props)
-    {
+    constructor(props: Props) {
         super(props);
         AsyncStorage.getItem("account").then((account) => {
-            if (account){
-                this.setState({email:JSON.parse(account).email})
-            }    
+            if (account) {
+                this.setState(
+                    { email: JSON.parse(account).email },
+                    () => {
+                        this.getPoint().then((point) => {
+                            AsyncStorage.setItem('point', JSON.stringify({ 'point': point }));
+                            this.setState({ point });
+                        });
+                    })
+            }
         })
-
-        let point = this.getPoint(); 
-        var result = AsyncStorage.setItem('point', JSON.stringify({'point':point}));
     }
 
-    async getPoint(){
+    async getPoint() {
         //var pointResp:IgetPointResponse<Number>;
-        var pointResp = await(await fetch(this.getUserAddress+ '/' + this.state.email + '?param=point', {
+        var pointResp = await (await fetch(this.getUserAddress + '/' + this.state.email + '?param=point', {
             method: 'get',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             }
         })).json();
-        if( pointResp.hasOwnProperty('point') ) {
+        if (pointResp.hasOwnProperty('point')) {
             return pointResp.point;
         }
         else {
-            return 0; 
+            return 0;
         }
     }
 
     pointOnChange = async () => {
         var point = await AsyncStorage.getItem("point");
-        console.log('point : ' + point ); 
-        if( point && JSON.parse(point).point != this.state.point ) 
-        {
+        console.log('point : ' + point);
+        if (point && JSON.parse(point).point != this.state.point) {
             try {
-                const curPoint = await this.getPoint(); 
-                AsyncStorage.setItem('point', JSON.stringify({'point':curPoint}));
+                const curPoint = await this.getPoint();
+                AsyncStorage.setItem('point', JSON.stringify({ 'point': curPoint }));
+                this.setState({point:curPoint});
             }
-            catch(err){
-                console.error(err); 
+            catch (err) {
+                console.error(err);
             }
         }
-    }    
-    
+    }
+
     componentDidMount() {
         this.pointHandler = setInterval(
             this.pointOnChange,
@@ -91,13 +95,13 @@ export default class Account extends React.Component<Props, State> {
     componentWillUnmount() {
         clearInterval(this.pointHandler);
     }
-    
+
     logout = async () => {
         console.log('logout');
         AsyncStorage.removeItem("account");
         AsyncStorage.removeItem("point");
         this.props.navigation.navigate('SingIn');
-        
+
     }
 
     changePushStatus = async (isOn) =>  {
@@ -114,18 +118,18 @@ export default class Account extends React.Component<Props, State> {
         }
         )
     }
-    
+
     render() {
         return (
             <View style={styles.container}>
                 <Text style={styles.ID}>ID: {this.state.email}</Text>
-                <Text style={styles.ID}>ID: {this.state.point}</Text>
-                <TouchableOpacity
-                    style={styles.button}
+                <Text style={styles.ID}>Point: {this.state.point}</Text>
+                <RoundedButton
+                    styleButton={styles.button}
                     onPress={this.logout}
-                >
-                    <Text style={styles.logout}>로그아웃</Text>
-                </TouchableOpacity>
+                    title='로그아웃'
+                    styleText={styles.logout}
+                />
                 <ToggleSwitch
                     isOn={this.state.pushStatus}
                     onColor="green"
@@ -134,7 +138,7 @@ export default class Account extends React.Component<Props, State> {
                     labelStyle={{ color: "black", fontWeight: "900" }}
                     size="small"
                     onToggle={isOn => {
-                        this.setState({pushStatus:isOn})
+                        this.setState({ pushStatus: isOn })
                         this.changePushStatus(isOn)
                     }}
                 />
@@ -149,7 +153,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    ID : {
+    ID: {
         //fontFamily: 'Baskerville',
         fontSize: 10,
         alignItems: 'center',

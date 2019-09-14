@@ -95,19 +95,6 @@ exports.createEvent = (owner, title, expiredAt, genderPermission, photos) => {
     });
 }
 
-exports.appendInfoToUser = async (id, appendData) => {
-    console.log("db.js - appendData");
-
-    var User = await User.findOne({id});
-    if( User == undefined || User == null )
-        return Promise.reject('There is no id');
-
-    for( key  in appendData ) {
-        User.key.push(appendData[key]);
-    }
-    User.save();
-    return Promise.resolve(User);
-}
 exports.fetchEvents = async (id) => {
     console.log("db.js - fetchEvents");
 
@@ -201,6 +188,14 @@ exports.createVote = async (voter, eventId, photoId) => {
                 event.voters.push(voter);
                 event.save();
 
+                User.findOneAndUpdate({ id: voter }, { $inc: { 'point': 1 } },
+                    (err, doc, res) => {
+                        if (err) {
+                            reject('UserPointHandlingError');
+                        }
+                        console.debug(doc);
+                    });
+
                 resolve(data);
             }
         });
@@ -288,11 +283,11 @@ exports.deleteUser = async (id) => {
 
 /* TODO: */
 
-exports.deleteEvent = async (id) => {
+exports.deleteEvent = async (owner, eventId) => {
     console.log("db.js - deleteEvent");
 
     var ret;
-    ret = await Event.remove({id: id}, (error, output) => {
+    ret = await Event.deleteOne({_id: eventId, owner:owner}, (error) => {
         if (error) {
             console.log(error);
         }
