@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, createContext } from 'react';
 import {  Text, View, StyleSheet } from 'react-native';
 import {
     ActivityIndicator,
@@ -6,7 +6,7 @@ import {
     StatusBar,
 } from 'react-native';
 
-import { createStackNavigator, createSwitchNavigator, createAppContainer } from 'react-navigation';
+import { createStackNavigator, createSwitchNavigator, createAppContainer, NavigationEvents } from 'react-navigation';
 import ToggleSwitch from 'toggle-switch-react-native'
 import SignUp from './../Signup'
 import { getPlatformOrientationLockAsync } from 'expo/build/ScreenOrientation/ScreenOrientation';
@@ -28,66 +28,87 @@ export default class Account extends React.Component<Props, State> {
         point: 0,
         pushStatus: true
     };
+    userId = "";
     pointHandler;
     serverAddress = config.getConfig('serverAddress');
     getUserAddress = this.serverAddress + "/users";
     userPatchAddress = this.serverAddress + "/users";
+    userInfoParam = "id,point,pushStatus";
 
     static navigationOptions = {
         header: null,
     };
 
+    readUserId = async () => {
+       const account = await AsyncStorage.getItem("account");
+       return JSON.parse(account).email;
+    }
+
     constructor(props: Props) {
         super(props);
-        AsyncStorage.getItem("account").then((account) => {
-            if (account) {
-                this.setState(
-                    { email: JSON.parse(account).email },
-                    () => {
-                        this.getPoint().then((point) => {
-                            AsyncStorage.setItem('point', JSON.stringify({ 'point': point }));
-                            this.setState({ point });
-                        });
-                    })
-            }
+        AsyncStorage.getItem("account").then(
+            (account) => {
+                if (account) {
+                    this.userId = JSON.parse(account).email;
+                    this.updateUserInfo(this.userId);
+                }
+            });
+    }
+
+    updateUserInfo = (userId:string = this.state.email) => {
+        this.getUserInfo(userId).then((userInfo) => {
+            const point = userInfo.point;
+            const pushStatus = userInfo.pushStatus;
+            this.setState({email:userId, point, pushStatus});
+            AsyncStorage.setItem('point', JSON.stringify({ point }));
         })
     }
 
-    async getPoint() {
-        //var pointResp:IgetPointResponse<Number>;
-        var pointResp = await (await fetch(this.getUserAddress + '/' + this.state.email + '?param=point', {
-            method: 'get',
+    async getUserInfo(userId:string) {
+        return await (await fetch(this.getUserAddress + '/' + userId + '?param=' + this.userInfoParam, {
+            method: 'GET',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             }
         })).json();
-        if (pointResp.hasOwnProperty('point')) {
-            return pointResp.point;
-        }
-        else {
-            return 0;
-        }
     }
 
-    pointOnChange = async () => {
-        var point = await AsyncStorage.getItem("point");
-        console.log('point : ' + point);
-        if (point && JSON.parse(point).point != this.state.point) {
-            try {
-                const curPoint = await this.getPoint();
-                AsyncStorage.setItem('point', JSON.stringify({ 'point': curPoint }));
-                this.setState({point:curPoint});
-            }
-            catch (err) {
-                console.error(err);
-            }
-        }
-    }
+    // async getPoint() {
+    //     //var pointResp:IgetPointResponse<Number>;
+    //     var pointResp = await (await fetch(this.getUserAddress + '/' + this.state.email + '?param=point', {
+    //         method: 'get',
+    //         headers: {
+    //             'Accept': 'application/json',
+    //             'Content-Type': 'application/json'
+    //         }
+    //     })).json();
+    //     if (pointResp.hasOwnProperty('point')) {
+    //         return pointResp.point;
+    //     }
+    //     else {
+    //         return 0;
+    //     }
+    // }
+
+    // pointOnChange = async () => {
+    //     var point = await AsyncStorage.getItem("point");
+    //     console.log('point : ' + point);
+    //     if (point && JSON.parse(point).point != this.state.point) {
+    //         try {
+    //             const curPoint = await this.getPoint();
+    //             AsyncStorage.setItem('point', JSON.stringify({ 'point': curPoint }));
+    //             this.setState({point:curPoint});
+    //         }
+    //         catch (err) {
+    //             console.error(err);
+    //         }
+    //     }
+    // }
 
     componentDidMount() {
         this.pointHandler = setInterval(
-            this.pointOnChange,
+            this.updateUserInfo,
             10000
         );
     }
@@ -101,13 +122,11 @@ export default class Account extends React.Component<Props, State> {
         AsyncStorage.removeItem("account");
         AsyncStorage.removeItem("point");
         this.props.navigation.navigate('SingIn');
-
     }
 
-    changePushStatus = async (isOn) =>  {
-        const patchAddress = this.userPatchAddress+'/'+this.state.email;
-        var response = await fetch(patchAddress, {
-            method: 'patch',
+    changePushStatus = async (isOn) => {
+        var response = await fetch(this.userPatchAddress, {
+            method: 'PATCH',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
@@ -122,6 +141,9 @@ export default class Account extends React.Component<Props, State> {
     render() {
         return (
             <View style={styles.container}>
+                <NavigationEvents
+                    onWillFocus={()=>this.updateUserInfo()}
+                />
                 <Text style={styles.ID}>ID: {this.state.email}</Text>
                 <Text style={styles.ID}>Point: {this.state.point}</Text>
                 <RoundedButton

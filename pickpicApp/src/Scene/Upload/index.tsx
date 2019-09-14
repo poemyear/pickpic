@@ -1,7 +1,7 @@
 import { Modal, Button, Dimensions, StyleSheet, Image, View, Text, Platform, TouchableOpacity, TextInput, TouchableHighlight, Picker } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import * as Permissions from 'expo-permissions';
-import Constants from 'expo-constants';
+// import * as ImagePicker from 'expo-image-picker';
+// import * as Permissions from 'expo-permissions';
+// import Constants from 'expo-constants';
 import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
 import React, { createRef } from 'react'
 // import DatePicker from 'react-native-datepicker'
@@ -297,12 +297,12 @@ export default class Upload extends React.Component<Props, State>{
 
   /* Permissions */
   getPermissionAsync = async () => {
-    if (Constants.platform.ios) {
-      const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
-      if (status !== 'granted') {
-        alert('Sorry, we need camera roll permissions to make this work!');
-      }
-    }
+    // if (Constants.platform.ios) {
+    //   const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+    //   if (status !== 'granted') {
+    //     alert('Sorry, we need camera roll permissions to make this work!');
+    //   }
+    // }
   }
 
   /* Handling Images */
@@ -357,21 +357,21 @@ export default class Upload extends React.Component<Props, State>{
   }
 
   _pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-    });
+    // // let result = await ImagePicker.launchImageLibraryAsync({
+    // //   mediaTypes: ImagePicker.MediaTypeOptions.All,
+    // //   allowsEditing: true,
+    // //   aspect: [4, 3],
+    // });
 
-    if (!result.cancelled) {
-      const length = this.state.imageInfos.length;
-      let images = [];
-      if (length > 1) // not first image
-        images = this.state.imageInfos.slice(1, length);
-      images.unshift({ image: result, index: length });
-      images.unshift({ image: null, index: length + 1 });
-      this.setState({ imageInfos: images });
-    }
+    // if (!result.cancelled) {
+    //   const length = this.state.imageInfos.length;
+    //   let images = [];
+    //   if (length > 1) // not first image
+    //     images = this.state.imageInfos.slice(1, length);
+    //   images.unshift({ image: result, index: length });
+    //   images.unshift({ image: null, index: length + 1 });
+    //   this.setState({ imageInfos: images });
+    // }
   };
 
   /* Deprecated */
