@@ -25,6 +25,7 @@ export default class SignIn extends React.Component<Props, State> {
     };
     serverAddress = config.getConfig('serverAddress');
     LoginRoutes = this.serverAddress + "/login";
+    NaverUriAddress= this.serverAddress + "/login/NaverLoginURL";
 
     static navigationOptions = {
         header: null,
@@ -76,6 +77,40 @@ export default class SignIn extends React.Component<Props, State> {
     switchSignUp = async () => {
         this.props.navigation.navigate('SignUp');
     };
+    getNaverUri = async () => {
+        var response = await fetch(this.NaverUriAddress, {
+            method: 'get',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+        });
+        const respObj = await response.json(); 
+        if ( respObj != undefined && respObj.hasOwnProperty('url') ) 
+            return respObj.url; 
+        else
+            return undefined; 
+    };
+
+    naverLogin = async() => {
+        const uri = await this.getNaverUri();
+        console.log(uri);
+        this.props.navigation.navigate('NaverLogin',{
+          uri : uri,
+          login:this.insertLogin,
+          loginFail:this.loginFail,
+        })
+      }
+    
+    insertLogin = () => {
+        console.log("SettingScreen insertLogin")
+    }
+
+    loginFail = () => {
+        console.log("SettingScreen loginFail")
+        this.props.navigation.goBack();
+        alert("로그인에 실패하였습니다. 잠시 후 다시 시도해주세요.");
+    }
 
     render() {
         return (
@@ -109,6 +144,8 @@ export default class SignIn extends React.Component<Props, State> {
                     title='간편 회원가입'
                     styleText={styles.buttonText}
                 />
+                <RoundedButton title={"Naver Login"} onPress={this.naverLogin}/>
+
             </View>
         );
     }
