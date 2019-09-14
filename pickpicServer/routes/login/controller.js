@@ -12,10 +12,31 @@ exports.login = (req, res) => {
         }).catch((err) => {console
         .error(err); res.status(400).send(err); });
 }
-exports.naverLogin = (req, res) => {
+exports.NaverAccessToken = (req, res) => {
     console.log("controoler.js - naverLogin");
 
-    console.log(req);
+    const CLIENT_ID = "SNkG235sZSCBwLQ_4qme";
+    const CLIENT_SECRET = "eygMpCLNzR";
+    const STATE_STRING = req.query.state;
+    const AUTHORIZATION_CODE = req.query.code;
+    const requestURL = 'https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id='+CLIENT_ID+'&client_secret='+CLIENT_SECRET+'&code='+AUTHORIZATION_CODE+'&state='+STATE_STRING ;
+    const response = fetch(requestURL)
+        .then(resp => resp.json())
+        .then(resp => {
+            /* save resp.refresh_token */
+            /* 갱신 토큰은 접근 토큰이 만료될 것을 대비하여 데이터베이스에 별도로 저장하고 이후 필요에 따라 갱신 토큰을 사용하면 됩니다. */
+            console.log(resp);
+            fetch('https://openapi.naver.com/v1/nid/me', {
+                method: 'post',
+                headers: { 'Authorization': resp.token_type + ' ' + resp.access_token },
+            }).then(resp=>resp.json())
+              .then(resp=>{
+                console.log(resp);
+              })
+        })
+        .catch(err => {
+            console.log(err);
+        } );
 }
 
 exports.getNaverLoginUri = (req, res) => {
@@ -38,7 +59,7 @@ exports.getNaverLoginUri = (req, res) => {
     const requestURL = 'https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id='+CLIENT_ID+'&state='+STATE_STRING+'&redirect_uri='+CALLBACK_URL;
     const response = fetch(requestURL)
         .then(resp => {
-            res.status(201).json({url: resp.url});
+            res.status(200).json({url: resp.url});
         })
         .catch(err => {
             console.log(err);
