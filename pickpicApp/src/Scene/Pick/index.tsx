@@ -239,7 +239,7 @@ export default class Pick extends React.Component<Props, State>{
                 <View style={{ flex: 1, alignItems: 'center', marginTop: 20 }}>
                     <RoundedButton
                         title='Pick'
-                        onPress={this.vote}
+                        onPress={this.likeAndVote}
                         styleButton={{ backgroundColor: 'rgba(20, 115, 250, 0.5)' }}
                         styleText={{ fontWeight: 'bold', fontFamily: "Georgia", color: 'white' }}
                     />

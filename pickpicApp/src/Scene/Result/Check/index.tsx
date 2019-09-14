@@ -41,6 +41,8 @@ interface State {
 export default class CheckResult extends React.Component<Props, State>{
     serverAddress = config.getConfig('serverAddress');
     eventRoute = this.serverAddress + "/events";
+    index = 0;
+    showStructure = [];
 
     constructor(props: Props) {
         super(props);
@@ -69,7 +71,7 @@ export default class CheckResult extends React.Component<Props, State>{
         for (let event of responseJson) {
             eventsSet.push(await this.plotEvent(event._id));
         }
-        let resultObj = { userId: userId, events: eventsSet, loading: "finish", tab: 0 };
+        let resultObj = { userId: userId, events: eventsSet, loading : 'finish', tab: 0 };
         return resultObj;
     }
 
@@ -84,7 +86,7 @@ export default class CheckResult extends React.Component<Props, State>{
         for (let event of responseJson) {
             eventsSet.push(await this.plotEvent(event._id));
         }
-        let resultObj = { userId: userId, events: eventsSet, loading: "finish", tab: 1 };
+        let resultObj = { userId: userId, events: eventsSet, loading : 'finish', tab: 1 };
         return resultObj;
     }
 
@@ -120,23 +122,172 @@ export default class CheckResult extends React.Component<Props, State>{
 
     fetchEvents = async () => {
         try {
-            console.log(this.state);
             if (this.state.tab === 0) {
                 let event = await this.checkingEventsOfMine();
-                this.setState(
-                    event
-                );
+                this.dataProcessing(event);
+                /*this.setState(
+                    event, () => this.dataProcessing()
+                );*/
+                //console.log(this.state);
             }
             else if (this.state.tab === 1) {
                 let event = await this.checkingEventsbyMe();
-                this.setState(
-                    event
-                );
-                console.log(this.state);
+                this.dataProcessing(event);
+                /*this.setState(
+                    event, () => this.dataProcessing()
+                );*/
+                //console.log(this.state);
             }
         } catch (err) {
             console.error(err);
         }
+    }
+
+    dataProcessing (resultEvent){
+        console.log("hahahahaa");
+        var sortedEvents = [];
+        for (let event of resultEvent.events) {
+            let oriStatus = event.result;
+            var sortStatusByCount = oriStatus.sort(function (a, b) {
+                return b.count - a.count;
+            });
+            sortedEvents.push({ eventId: event.eventId, title: event.title, status: event.status, result: sortStatusByCount });
+        }
+
+        var data_all = [];
+        //var showStructure = [];
+        sortedEvents.forEach((event, i) => {
+            var data = [];
+            var pasteData = [];
+            var imageHeight = 160;
+            var imageWidth = 160;
+
+            for (let j of event.result) {
+                var data_item = { id: j.photoId, uri: this.serverAddress + "/" + j.path };
+                data.push(data_item);
+
+                pasteData.push(
+                    <Image key={j.photoId}
+                        style={{ height: imageHeight, width: imageWidth }}
+                        source={data_item}
+                    />
+                )
+                imageHeight -= 40;
+                imageWidth -= 40;
+            }
+            data_all.push(data);
+
+            console.log("lenghth : " + this.showStructure.length);
+            this.showStructure.push(
+                <View key={this.index}>
+                    <View style={{ flexDirection: 'row' }}>
+                        <View style={{ flex: 1, alignItems: 'flex-start', paddingHorizontal: 15 }}>
+                            <RoundedButton
+                                title={event.status === 'voting' ? '투표중' : '만료'}
+                                styleButton={{
+                                    backgroundColor: event.status === 'voting' ? 'rgba(240, 10, 10, 0.6)' : 'gray',
+                                    width: 50, height: 25, padding: 5, marginBottom: 0
+                                }}
+                                styleText={{ color: 'white', fontSize: 12 }}
+                            />
+                        </View>
+                        <Text style={{ fontSize: 20 }}>{event.title} </Text>
+                        <View style={{ flex: 1, alignItems: 'flex-end', paddingHorizontal: 15 }}>
+                            <DetailButton onPress={() => this.handleEventDetail(i)} />
+                        </View>
+                    </View>
+                    <View style={{
+                        flexDirection: 'row',
+                        padding: 20, borderBottomWidth: 0.5, borderColor: '#444', borderTopWidth: 0.5
+                    }}>
+
+                        <View style={{ flex: 4, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'flex-start' }}>
+                            {pasteData}
+                        </View>
+
+
+                    </View>
+                </View>
+            )
+            this.index++;
+        });
+        this.setState(
+            resultEvent
+        )
+
+    }
+
+    dataProcessing2 () {
+        console.log("hahahahaa");
+        var sortedEvents = [];
+        for (let event of this.state.events) {
+            let oriStatus = event.result;
+            var sortStatusByCount = oriStatus.sort(function (a, b) {
+                return b.count - a.count;
+            });
+            sortedEvents.push({ eventId: event.eventId, title: event.title, status: event.status, result: sortStatusByCount });
+        }
+
+        var data_all = [];
+        //var showStructure = [];
+        sortedEvents.forEach((event, i) => {
+            var data = [];
+            var pasteData = [];
+            var imageHeight = 160;
+            var imageWidth = 160;
+
+            for (let j of event.result) {
+                var data_item = { id: j.photoId, uri: this.serverAddress + "/" + j.path };
+                data.push(data_item);
+
+                pasteData.push(
+                    <Image key={j.photoId}
+                        style={{ height: imageHeight, width: imageWidth }}
+                        source={data_item}
+                    />
+                )
+                imageHeight -= 40;
+                imageWidth -= 40;
+            }
+            data_all.push(data);
+
+            console.log("lenghth : " + this.showStructure.length);
+            this.showStructure.push(
+                <View key={this.index}>
+                    <View style={{ flexDirection: 'row' }}>
+                        <View style={{ flex: 1, alignItems: 'flex-start', paddingHorizontal: 15 }}>
+                            <RoundedButton
+                                title={event.status === 'voting' ? '투표중' : '만료'}
+                                styleButton={{
+                                    backgroundColor: event.status === 'voting' ? 'rgba(240, 10, 10, 0.6)' : 'gray',
+                                    width: 50, height: 25, padding: 5, marginBottom: 0
+                                }}
+                                styleText={{ color: 'white', fontSize: 12 }}
+                            />
+                        </View>
+                        <Text style={{ fontSize: 20 }}>{event.title} </Text>
+                        <View style={{ flex: 1, alignItems: 'flex-end', paddingHorizontal: 15 }}>
+                            <DetailButton onPress={() => this.handleEventDetail(i)} />
+                        </View>
+                    </View>
+                    <View style={{
+                        flexDirection: 'row',
+                        padding: 20, borderBottomWidth: 0.5, borderColor: '#444', borderTopWidth: 0.5
+                    }}>
+
+                        <View style={{ flex: 4, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'flex-start' }}>
+                            {pasteData}
+                        </View>
+
+
+                    </View>
+                </View>
+            )
+            this.index++;
+        });
+        this.setState({
+            loading : "finish"
+        })
     }
 
     async componentDidMount() {
@@ -152,15 +303,17 @@ export default class CheckResult extends React.Component<Props, State>{
         try {
             if (this.state.tab === 0) {
                 let event = await this.checkingEventsOfMine();
-                this.setState(
-                    event
-                );
+                this.dataProcessing(event);
+                /*this.setState(
+                    event, () => this.dataProcessing()
+                );*/
             }
             else if (this.state.tab === 1) {
                 let event = await this.checkingEventsbyMe();
-                this.setState(
-                    event
-                );
+                this.dataProcessing(event);
+                /*this.setState(
+                    event, () => this.dataProcessing()
+                );*/
                 console.log(this.state);
             }
         } catch (err) {
@@ -183,20 +336,16 @@ export default class CheckResult extends React.Component<Props, State>{
         this.setState({
             fetchCnt : this.state.fetchCnt + 2
         }, this.fetchEvents);
-        console.log("++++++" + this.state.fetchCnt);
     }
 
     _renderItem = ({item}) => {
-        console.log("hoho")
         return (
             <View>
-                {this.showStructure}
+                {item}
             </View>
         )
-    }
 
-    index = 0;
-    showStructure = [];
+    }
     cnt = 0;
     render() {
         console.log("Check Result Render", this.cnt);
@@ -204,81 +353,41 @@ export default class CheckResult extends React.Component<Props, State>{
 
         if (this.state.loading === 'init') {
             console.log("Setstate Not Finished")
-            return <Text style={{ fontSize: 20 }}> Checking...</Text>
+            return( //<Text style={{ fontSize: 20 }}> Checking...</Text>
+            <View>
+                        
+                        <View style={{
+                            alignItems: 'center', justifyContent: 'center',
+                            padding: 20, borderBottomWidth: 0.5, borderColor: '#444', borderTopWidth: 0.5
+                        }}>
+                            <SwitchButton
+                                onValueChange={(val) => { this.setState({ tab: val, fetchCnt : 0 }, this.changedTab) }}      // this is necessary for this component
+                                text1='My Events'                        // optional: first text in switch button --- default ON
+                                text2='My Picks'                       // optional: second text in switch button --- default OFF
+                                switchWidth={250}                 // optional: switch width --- default 44
+                                switchHeight={44}                 // optional: switch height --- default 100
+                                switchdirection='ltr'             // optional: switch button direction ( ltr and rtl ) --- default ltr
+                                switchBorderRadius={100}          // optional: switch border radius --- default oval
+                                switchSpeedChange={500}           // optional: button change speed --- default 100
+                                switchBorderColor='#d4d4d4'       // optional: switch border color --- default #d4d4d4
+                                switchBackgroundColor='#fff'      // optional: switch background color --- default #fff
+                                btnBorderColor='#00a4b9'          // optional: button border color --- default #00a4b9
+                                btnBackgroundColor='#00bcd4'      // optional: button background color --- default #00bcd4
+                                fontColor='#b1b1b1'               // optional: text font color --- default #b1b1b1
+                                activeFontColor='#fff'            // optional: active font color --- default #fff
+                            />
+                        </View>
+                        <Text style={{ fontSize: 20 }}> Checking...</Text>
+                        
+                    </View>
+            )
         }
 
         if (this.state.loading === 'finish') {
             console.log("Setstate Finished");
 
-            var sortedEvents = [];
-            for (let event of this.state.events) {
-                let oriStatus = event.result;
-                var sortStatusByCount = oriStatus.sort(function (a, b) {
-                    return b.count - a.count;
-                });
-                sortedEvents.push({ eventId: event.eventId, title: event.title, status: event.status, result: sortStatusByCount });
-            }
-
-            var data_all = [];
-            //var showStructure = [];
-            sortedEvents.forEach((event, i) => {
-                var data = [];
-                var pasteData = [];
-                var imageHeight = 160;
-                var imageWidth = 160;
-
-                for (let j of event.result) {
-                    var data_item = { id: j.photoId, uri: this.serverAddress + "/" + j.path };
-                    data.push(data_item);
-
-                    pasteData.push(
-                        <Image key={j.photoId}
-                            style={{ height: imageHeight, width: imageWidth }}
-                            source={data_item}
-                        />
-                    )
-                    imageHeight -= 40;
-                    imageWidth -= 40;
-                }
-                data_all.push(data);
-                this.index++;
-                this.showStructure.push(
-                    <View key={this.index}>
-                        <View style={{ flexDirection: 'row' }}>
-                            <View style={{ flex: 1, alignItems: 'flex-start', paddingHorizontal: 15 }}>
-                                <RoundedButton
-                                    title={event.status === 'voting' ? '투표중' : '만료'}
-                                    styleButton={{
-                                        backgroundColor: event.status === 'voting' ? 'rgba(240, 10, 10, 0.6)' : 'gray',
-                                        width: 50, height: 25, padding: 5, marginBottom: 0
-                                    }}
-                                    styleText={{ color: 'white', fontSize: 12 }}
-                                />
-                            </View>
-                            <Text style={{ fontSize: 20 }}>{event.title} </Text>
-                            <View style={{ flex: 1, alignItems: 'flex-end', paddingHorizontal: 15 }}>
-                                <DetailButton onPress={() => this.handleEventDetail(i)} />
-                            </View>
-                        </View>
-                        <View style={{
-                            flexDirection: 'row',
-                            padding: 20, borderBottomWidth: 0.5, borderColor: '#444', borderTopWidth: 0.5
-                        }}>
-
-                            <View style={{ flex: 4, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'flex-start' }}>
-                                {pasteData}
-                            </View>
-
-
-                        </View>
-                    </View>
-
-                    //</View>
-
-                )
-            });
-
             console.log("---------------- tab : ", this.state.tab);
+            console.log(this.showStructure.length);
             return (
                     <View>
                         <NavigationEvents
@@ -292,7 +401,7 @@ export default class CheckResult extends React.Component<Props, State>{
                             padding: 20, borderBottomWidth: 0.5, borderColor: '#444', borderTopWidth: 0.5
                         }}>
                             <SwitchButton
-                                onValueChange={(val) => { this.setState({ tab: val }, this.changedTab) }}      // this is necessary for this component
+                                onValueChange={(val) => { this.setState({ tab: val, fetchCnt : 0 }, this.changedTab) }}      // this is necessary for this component
                                 text1='My Events'                        // optional: first text in switch button --- default ON
                                 text2='My Picks'                       // optional: second text in switch button --- default OFF
                                 switchWidth={250}                 // optional: switch width --- default 44
