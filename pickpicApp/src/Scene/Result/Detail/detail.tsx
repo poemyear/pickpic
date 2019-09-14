@@ -77,12 +77,12 @@ export default class Detail extends React.Component<Props, State>{
                     <Text> Expired {moment(this.props.eventExpiredAt).fromNow()}</Text>
                 </View>
                 <View style={{ flex: barFlex, flexDirection: "row", }}>
-                    {this.renderYaxis}
-                    {this.renderBarChart}
+                    {/* {this.renderYaxis} */}
+                    {/* {this.renderBarChart} */}
                 </View>
                 <Text style={{ textAlign: 'center', color: 'gray' }}> 차트를 터치하면 사진이 확대됩니다. </Text>
                 <View style={{ flex: pieFlex }}>
-                    {this.renderPieChart}
+                    {/* {this.renderPieChart} */}
                 </View>
                 {this.modalPressInImageVIew}
             </View>
