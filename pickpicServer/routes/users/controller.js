@@ -3,14 +3,8 @@ const db = require('../db');
 
 // /db.connect();
 
-exports.patch = (req, res) => {
-    console.log("controller.js - patch");
-    var patchData = {}
-    if( req.body.hasOwnProperty('pushStatus') ) {
-        patchData['patchStatus'] = req.body.pushStatus;
-    }
-    console.log(patchData);
-    return db.patchUser(req.body.id, patchData)
+changeUserInfo = (req, res, patchData) => {
+    return db.patchUser(req.params.id, patchData)
         .then((result) => {
             console.log(result);
             res.send(result);
@@ -18,6 +12,30 @@ exports.patch = (req, res) => {
             console.log(err);
             res.status(400).json({error: 'Patch Error'});
         });
+}
+
+appendInfoToUser = (req, res, appendData) => {
+    return db.appendInfoToUser(appendData)
+        .then((result) => {
+            console.log(result);
+            res.send(result);
+        }).catch((err) => {
+            console.log(err);
+            res.status(400).json({error: 'Patch Error'});
+        });
+}
+
+exports.patch = (req, res) => {
+    console.log("controller.js - patch");
+    var patchData = {};
+    if( req.body.hasOwnProperty('token') ) {
+        appendData['token'] = req.body.token;
+        appendInfoToUser( req, res, appendData );
+    }
+    if( req.body.hasOwnProperty('pushStatus') ) {
+        patchData['patchStatus'] = req.body.pushStatus;
+        changeUserInfo( req, res, patchData );
+    }
 }
 
 exports.index = (req, res) => {

@@ -45,6 +45,7 @@ var User = mongoose.model('User', mongoose.Schema({
     id: 'string',
     password: 'string',
     pushStatus : 'boolean',
+    token : [],
     point : Number
 }));
 
@@ -94,6 +95,19 @@ exports.createEvent = (owner, title, expiredAt, genderPermission, photos) => {
     });
 }
 
+exports.appendInfoToUser = async (id, appendData) => {
+    console.log("db.js - appendData");
+
+    var User = await User.findOne({id});
+    if( User == undefined || User == null )
+        return Promise.reject('There is no id');
+
+    for( key  in appendData ) {
+        User.key.push(appendData[key]);
+    }
+    User.save();
+    return Promise.resolve(User);
+}
 exports.fetchEvents = async (id) => {
     console.log("db.js - fetchEvents");
 

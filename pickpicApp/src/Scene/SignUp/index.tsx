@@ -6,6 +6,7 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import { RaisedTextButton } from 'react-native-material-buttons';
 import { NavigationActions } from 'react-navigation'
 import { any } from 'prop-types';
+import config from '../../Component/config';
 
 interface State {
   errors?: any;
@@ -22,7 +23,7 @@ export default class SignUp extends React.Component<Props, State> {
   emailRef: any;
   passwordRef: any;
   password: any;
-  serverAddress = "http://localhost:3000";
+  serverAddress = config.getConfig('serverAddress');
   createUserRoute = this.serverAddress + "/users";
 
   updateRef(name, ref) {

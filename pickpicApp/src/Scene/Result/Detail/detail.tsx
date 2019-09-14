@@ -6,6 +6,7 @@ import * as scale from 'd3-scale'
 import { PieChart } from 'react-native-svg-charts'
 import { Circle, G, Line } from 'react-native-svg'
 import moment from 'moment';
+import config from '../../../Component/config';
 
 const { width: screenWidth } = Dimensions.get('window')
 interface Props {
@@ -37,7 +38,7 @@ interface State {
 }
 
 export default class Detail extends React.Component<Props, State>{
-    serverAddress = "http://localhost:3000";
+    serverAddress = config.getConfig('serverAddress');
     eventRoute = this.serverAddress + "/events";
 
     constructor(props: Props) {
@@ -89,7 +90,7 @@ export default class Detail extends React.Component<Props, State>{
                             height={imageSize}
                             preserveAspectRatio="xMidYMid slice"
                             opacity="1"
-                            href={{ uri: "http://localhost:3000/" + data.thumbnailPath }}
+                            href={{ uri: this.serverAddress + data.thumbnailPath }}
                         />
                         <SvgText
                             key={index}

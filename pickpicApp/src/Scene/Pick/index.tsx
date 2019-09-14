@@ -1,8 +1,10 @@
 import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
-import { Button, Dimensions, StyleSheet, Image, View, Text, Platform, Animated } from 'react-native';
+import { AsyncStorage, Button, Dimensions, StyleSheet, Image, View, Text, Platform, Animated } from 'react-native';
 import React, { createRef } from 'react'
 import moment from 'moment';
 import { NavigationEvents } from 'react-navigation';
+import registerForPushNotificationsAsync from '../../Component/pushNotification';
+import config from '../../Component/config';
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -20,13 +22,14 @@ interface State {
             uri: string
         }[];
     }[],
+    email: string,
     like: boolean,
 }
 
 
 export default class Pick extends React.Component<Props, State>{
     carouselRef = createRef<Carousel>();
-    serverAddress = "http://localhost:3000";
+    serverAddress = config.getConfig('serverAddress');
     eventRoute = this.serverAddress + "/events";
     // userId = "bakyuns";
     userId = "randomId-" + Math.floor(Math.random() * 10);  // TODO: use signed in user's _id  
@@ -37,6 +40,7 @@ export default class Pick extends React.Component<Props, State>{
             eventIdx: -1,
             events: [],
             like: false,
+            email: ''
         }
         console.debug('Pick constructor');
     }
@@ -136,6 +140,12 @@ export default class Pick extends React.Component<Props, State>{
         } catch (err) {
             console.error(err);
         }
+        AsyncStorage.getItem("account").then((account) => {
+            if (account){
+                this.setState({email:JSON.parse(account).email})
+                registerForPushNotificationsAsync(this.state.email);
+            }    
+        });
     }
 
     _renderItem = ({ item, index }, parallaxProps) => {

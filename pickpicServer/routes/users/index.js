@@ -5,7 +5,7 @@ const controller = require('./controller');
 router.get('/', controller.index);
 router.get('/:id', controller.show);
 router.post('/', controller.create);
-router.patch('/', controller.patch);
+router.patch('/:id', controller.patch);
 
 /* Unused */
 router.put('/', controller.update);

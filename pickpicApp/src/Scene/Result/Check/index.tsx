@@ -2,6 +2,7 @@ import { Button, Dimensions, StyleSheet, View, Image, Text, Platform, Switch, Sc
 import React from 'react'
 import SwitchButton from "../../../Component/SwitchButton.js"
 import { NavigationEvents } from 'react-navigation';
+import config from '../../../Component/config';
 
 const { width: screenWidth } = Dimensions.get('window')
 interface Props {
@@ -32,7 +33,7 @@ interface State {
 
 
 export default class CheckResult extends React.Component<Props, State>{
-    serverAddress = "http://localhost:3000";
+    serverAddress = config.getConfig('serverAddress');
     eventRoute = this.serverAddress + "/events";
 
     constructor(props: Props) {

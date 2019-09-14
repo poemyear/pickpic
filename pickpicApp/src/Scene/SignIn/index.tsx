@@ -6,6 +6,7 @@ import {
     StatusBar,
 } from 'react-native';
 import { NavigationActions } from 'react-navigation'
+import config from '../../Component/config';
 
 interface Props {
     navigation: any
@@ -20,7 +21,7 @@ export default class SignIn extends React.Component<Props, State> {
         email: '',
         password: '',
     };
-    serverAddress = "http://localhost:3000";
+    serverAddress = config.getConfig('serverAddress');
     LoginRoutes = this.serverAddress + "/login";
 
     static navigationOptions = {
@@ -36,6 +37,7 @@ export default class SignIn extends React.Component<Props, State> {
         })
     }
     SignInRequest = async ( email, password ) => {
+        console.log("SignInRequest address: " + this.LoginRoutes); 
         var response = await fetch(this.LoginRoutes, {
             method: 'post',
             headers: {

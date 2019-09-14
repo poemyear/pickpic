@@ -6,8 +6,7 @@ import * as Font from 'expo-font';
 
 import AppNavigator from './src/Navigation/AppNavigator';
 import Signin from './src/Scene/Signin';
-import firebase from 'react-native-firebase';
-import * as push from './src/Component/push';
+import registerForPushNotificationsAsync from './src/Component/pushNotification';
 
 interface Props {
 

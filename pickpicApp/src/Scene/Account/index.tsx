@@ -10,6 +10,7 @@ import { createStackNavigator, createSwitchNavigator, createAppContainer } from 
 import ToggleSwitch from 'toggle-switch-react-native'
 import SignUp from './../Signup'
 import { getPlatformOrientationLockAsync } from 'expo/build/ScreenOrientation/ScreenOrientation';
+import config from '../../Component/config';
 
 interface Props {
     navigation: any
@@ -27,7 +28,7 @@ export default class Account extends React.Component<Props, State> {
         pushStatus: true 
     };
     pointHandler:number;
-    serverAddress = "http://localhost:3000";
+    serverAddress = config.getConfig('serverAddress');
     getUserAddress = this.serverAddress + "/users";
     userPatchAddress = this.serverAddress + "/users";
 
@@ -100,14 +101,14 @@ export default class Account extends React.Component<Props, State> {
     }
 
     changePushStatus = async (isOn) =>  {
-        var response = await fetch(this.userPatchAddress, {
+        const patchAddress = this.userPatchAddress+'/'+this.state.email;
+        var response = await fetch(patchAddress, {
             method: 'patch',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                'id': this.state.email,
                 'pushStatus': isOn,
             })
         }

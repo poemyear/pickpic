@@ -11,7 +11,7 @@ const { width: screenWidth } = Dimensions.get('window')
 import ActionSheet from 'react-native-actionsheet';
 import GenderPermisson, { getPermissionLabel, getPermissionLables, getPermissionValue } from '../../Component/GenderPermission';
 import Toast from 'react-native-root-toast';
-
+import config from '../../Component/config';
 
 interface Props {
 };
@@ -39,7 +39,7 @@ interface ImageFile extends Blob {
 
 export default class Upload extends React.Component<Props, State>{
   carouselRef = createRef<Carousel>();
-  serverAddress = "http://localhost:3000";
+  serverAddress = config.getConfig('serverAddress');
   eventRoute = this.serverAddress + "/events";
   ActionSheet = {
     option: null,
