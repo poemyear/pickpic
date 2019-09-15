@@ -9,12 +9,14 @@ import { any } from 'prop-types';
 import config from '../../Component/config';
 import Sha256 from '../../Component/Sha256'
 import { AppLoading } from 'expo';
+import { SegmentedControls } from 'react-native-radio-buttons'
 
 interface State {
   errors?: any;
   emailRef?: any;
   secureTextEntry?: any;
   dupCheck: Boolean;
+  sex: String; 
   [x: string]: any;
 }
 interface Props {
@@ -187,7 +189,8 @@ export default class SignUp extends React.Component<Props, State> {
 
     this.state = {
       secureTextEntry: true,
-      dupCheck : false
+      dupCheck : false,
+      sex : '남자'
     };
   }
   static navigationOptions = {
@@ -195,6 +198,17 @@ export default class SignUp extends React.Component<Props, State> {
   };
   render() {
     let { errors = {}, secureTextEntry, ...data } = this.state;
+    const options = [
+      "남자",
+      "여자"
+    ];
+
+    function setSelectedOption(sex){
+      this.setState({
+        sex 
+      });
+    }
+
     return (
       <View style={styles.container}>
         <StatusBar barStyle="default" />
@@ -279,7 +293,14 @@ export default class SignUp extends React.Component<Props, State> {
           label='닉네임'
           error={errors.nickname}
         />
+        <Text style={{paddingBottom: 10, fontWeight:'bold'}}>성별</Text>
+        <SegmentedControls
+          options={ options }
+          onSelection={ setSelectedOption.bind(this) }
+          selectedOption={ this.state.sex }
+        />
 
+        
         <RaisedTextButton onPress={this.onSubmit} title='submit' color={TextField.defaultProps.tintColor} titleColor='white' />
       </View>
     );
