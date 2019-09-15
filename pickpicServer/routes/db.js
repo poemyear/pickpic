@@ -46,7 +46,10 @@ var User = mongoose.model('User', mongoose.Schema({
     password: 'string',
     pushStatus : 'boolean',
     token : [],
-    point : Number
+    point : Number,
+    sex : 'string',
+    nickname : 'string',
+    birthday : 'string'
 }));
 
 var Vote = mongoose.model('Vote', mongoose.Schema({
@@ -269,7 +272,7 @@ exports.patchUser = (id, patchData) => {
         });
     });
 }
-exports.createUser = (id,password) => {
+exports.createUser = (id, password, nickname, sex, birthday) => {
     console.debug("db.js - createUser", id, password);
 
     return new Promise( ( resolve, reject ) =>
@@ -277,7 +280,7 @@ exports.createUser = (id,password) => {
         User.findOne({id}, (err, result) => {
             if( result ) reject('UserAlreadyError');
 
-            User.create({id, password, pushStatus:true, point:0 }, (err, result) => {
+            User.create({id, password, nickname, sex, birthday, pushStatus:true, point:0 }, (err, result) => {
                 resolve( result );
             })
         })

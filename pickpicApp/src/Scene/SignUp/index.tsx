@@ -1,14 +1,12 @@
 import React, { Component } from 'react';
 import { Alert, Button, Text, TouchableOpacity, TextInput, StatusBar, View, StyleSheet } from 'react-native';
-import t from 'tcomb-form-native';
 import { TextField } from 'react-native-material-textfield';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import { RaisedTextButton } from 'react-native-material-buttons';
 import { NavigationActions } from 'react-navigation'
-import { any } from 'prop-types';
 import config from '../../Component/config';
 import Sha256 from '../../Component/Sha256'
-import { AppLoading } from 'expo';
+import DatePicker from 'react-native-datepicker'
 import { SegmentedControls } from 'react-native-radio-buttons'
 
 interface State {
@@ -17,6 +15,7 @@ interface State {
   secureTextEntry?: any;
   dupCheck: Boolean;
   sex: String; 
+  birthday: String; 
   [x: string]: any;
 }
 interface Props {
@@ -61,7 +60,6 @@ export default class SignUp extends React.Component<Props, State> {
   }
   dupCheck = async() => {
     console.log("dupCheck");
-    console.log(this.dupCheckRoute+'/'+this.state['email']+'?dupCheck=1');
     var response = await fetch(this.dupCheckRoute+'/'+this.state['email']+'?dupCheck=1', { 
       method: 'get',
       headers: {
@@ -81,7 +79,6 @@ export default class SignUp extends React.Component<Props, State> {
   }
 
   renderEmailAccessory() {
-    console.log('renderEmailaccessory');
     return (
       <RaisedTextButton onPress={this.dupCheck} title='중복체크' color={TextField.defaultProps.tintColor} titleColor='white' />
     );
@@ -115,8 +112,16 @@ export default class SignUp extends React.Component<Props, State> {
       });
   }
 
-  SignUpRequest = async (email:string, password:string) => {
-    console.log(email, password);
+  SignUpRequest = async () => {
+    console.log('SignUpRequest');
+    console.log(this.state); 
+    const email = this.state['email'];
+    const password = this.state['password']; 
+    const nickname = this.state['nickname']; 
+    const sex = this.state.sex;
+    const birthday = this.state.birthday; 
+
+    console.log(email, password, nickname, sex, birthday);
     var response = await fetch(this.createUserRoute, {
       method: 'post',
       headers: {
@@ -125,7 +130,10 @@ export default class SignUp extends React.Component<Props, State> {
       },
       body: JSON.stringify({
         'id': email.toLowerCase(),
-        'password': Sha256(password)
+        'password': Sha256(password),
+        nickname,
+        sex,
+        birthday
       })
     });
     
@@ -142,6 +150,11 @@ export default class SignUp extends React.Component<Props, State> {
       this.props.navigation.dispatch(NavigationActions.back());
     }
   }
+  setSex(sex) {
+    this.setState({
+      sex
+    });
+  }
   onSubmit() {
     let errors = {};
 
@@ -157,8 +170,11 @@ export default class SignUp extends React.Component<Props, State> {
           if ('password' === name && value.length < 6) {
             errors[name] = '패스워드가 너무 짧습니다.';
           }
-          else if( 'password_verify' === name && this['password'] != value )
+          else if( 'password_verify' === name && this['password'].value() != value )
           {
+            console.log( 'password verify' ); 
+            console.log( this['password'].value() );
+            console.log( value ); 
             errors[name] = '패스워드가 서로 다릅니다.';
           }
         }
@@ -167,7 +183,7 @@ export default class SignUp extends React.Component<Props, State> {
     this.setState({ errors });
     if (!Object.keys(errors).length) {
       console.log('There are no errors');
-      this.SignUpRequest(this['email'].value(), this['password'].value());
+      this.SignUpRequest();
 
     }
   }
@@ -186,11 +202,13 @@ export default class SignUp extends React.Component<Props, State> {
     this.onSubmit = this.onSubmit.bind(this);
     //this.dupCheck = this.dupCheck.bind(this);
     this.onChangeText = this.onChangeText.bind(this);
+    this.setSex = this.setSex.bind(this); 
 
     this.state = {
       secureTextEntry: true,
       dupCheck : false,
-      sex : '남자'
+      sex : '남자',
+      birthday : '2019-01-01'
     };
   }
   static navigationOptions = {
@@ -203,13 +221,7 @@ export default class SignUp extends React.Component<Props, State> {
       "여자"
     ];
 
-    function setSelectedOption(sex){
-      this.setState({
-        sex 
-      });
-    }
-
-    return (
+        return (
       <View style={styles.container}>
         <StatusBar barStyle="default" />
 
@@ -227,13 +239,6 @@ export default class SignUp extends React.Component<Props, State> {
               error={errors.email}
               renderAccessory={this.renderEmailAccessory}
             />
-        <View
-          style={{
-            borderBottomColor: 'gray',
-            borderBottomWidth: 1,
-            marginTop: 100,
-          }}
-         /> 
         <TextField
           ref={this.passwordRef}
           value={data.password}
@@ -274,13 +279,6 @@ export default class SignUp extends React.Component<Props, State> {
           renderAccessory={this.renderPasswordAccessory}
         />
       
-        <View
-          style={{
-            borderBottomColor: 'gray',
-            borderBottomWidth: 1,
-            marginTop: 100,
-          }}
-        />
         <TextField
           ref={this.nicknameRef}
           value={data.nickname}
@@ -293,13 +291,39 @@ export default class SignUp extends React.Component<Props, State> {
           label='닉네임'
           error={errors.nickname}
         />
+
         <Text style={{paddingBottom: 10, fontWeight:'bold'}}>성별</Text>
         <SegmentedControls
           options={ options }
-          onSelection={ setSelectedOption.bind(this) }
+          onSelection={ this.setSex.bind(this) }
           selectedOption={ this.state.sex }
         />
 
+        <Text style={{paddingBottom: 10, fontWeight:'bold'}}>생년월일</Text>
+        <DatePicker
+          style={{width: 200}}
+          date={this.state.birthday}
+          mode="date"
+          placeholder="생년월일 선택"
+          format="YYYY-MM-DD"
+          minDate="1960-01-01"
+          maxDate="2020-01-01"
+          confirmBtnText="완료"
+          cancelBtnText="취소"
+          customStyles={{
+            dateIcon: {
+              position: 'absolute',
+              left: 0,
+              top: 4,
+              marginLeft: 0
+            },
+            dateInput: {
+              marginLeft: 36
+            }
+            // ... You can check the source to find the other keys.
+          }}
+          onDateChange={(birthday) => {this.setState({birthday: birthday})}}
+        />
         
         <RaisedTextButton onPress={this.onSubmit} title='submit' color={TextField.defaultProps.tintColor} titleColor='white' />
       </View>
