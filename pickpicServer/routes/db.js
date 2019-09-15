@@ -107,7 +107,7 @@ exports.fetchEvents = async (id) => {
                 .limit(10);
 }
 
-exports.fetchMyEvents = async (id) => {
+exports.fetchMyEvents = async (id, cnt) => {
     console.log("db.js - fetchMyEvents");
     return Event.find({
                         "owner":id,
@@ -115,16 +115,18 @@ exports.fetchMyEvents = async (id) => {
                         "photos.0": { "$exists": true },
                         "status":"voting"})
                 .sort({'createdAt': -1})
-                .limit(10);
+                .skip(Number(cnt))
+                .limit(2);
 }
 
-exports.fetchMyPicks = async (id) => {
+exports.fetchMyPicks = async (id, cnt) => {
     console.log("db.js - fetchMyPicks");
     return Event.find({
                         "voters":{$in:id},
                         "photos.0": { "$exists": true },
                         "status":"voting"})
                 .sort({'createdAt': -1})
+                .skip(Number(cnt))
                 .limit(10);
 }
 

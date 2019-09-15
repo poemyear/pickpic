@@ -43,8 +43,8 @@ router.post('/', upload.array("userfile"), generateThumbnnail, controller.create
 router.get('/:eventId', controller.show);
 router.get('/:eventId/status', controller.status);
 router.post('/:eventId/:photoId', controller.vote);
-router.get('/myEvents/:userId',controller.showMyEvents);
-router.get('/myPicks/:userId',controller.showMyPicks);
+router.get('/myEvents/:userId/:cnt',controller.showMyEvents);
+router.get('/myPicks/:userId/:cnt',controller.showMyPicks);
 
 /* Unused */
 router.put('/', controller.update);

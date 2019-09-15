@@ -1,4 +1,4 @@
-import { Button, Dimensions, StyleSheet, View, Image, Text, Platform, Switch, ScrollView, Alert } from 'react-native';
+import { Button, Dimensions, StyleSheet, View, Image, Text, Platform, Switch, ScrollView, Alert, FlatList } from 'react-native';
 import React from 'react'
 import SwitchButton from "../../../Component/SwitchButton.js"
 import { NavigationEvents } from 'react-navigation';
@@ -34,12 +34,15 @@ interface State {
     loading: string,
     tab: number,    // 0 : 내꺼 , 1 : 남꺼
     eventSelectedIdx: number,
+    fetchCnt : number
 }
 
 
 export default class CheckResult extends React.Component<Props, State>{
     serverAddress = config.getConfig('serverAddress');
     eventRoute = this.serverAddress + "/events";
+    index = 0;
+    showStructure = [];
 
     constructor(props: Props) {
         super(props);
@@ -53,12 +56,13 @@ export default class CheckResult extends React.Component<Props, State>{
             loading : "init",
             tab : 0*/
             eventSelectedIdx: 0,
+            fetchCnt : 0
         }
     }
 
     checkingEventsOfMine = async () => {
         const userId = "bakyuns";
-        const checkingMyResult = this.eventRoute + "/myEvents/" + userId;
+        const checkingMyResult = this.eventRoute + "/myEvents/" + userId + '/' + this.state.fetchCnt;
         //const checkingMyResult = this.eventRoute;
 
         let responseJson = await (await fetch(checkingMyResult)).json();
@@ -67,13 +71,13 @@ export default class CheckResult extends React.Component<Props, State>{
         for (let event of responseJson) {
             eventsSet.push(await this.plotEvent(event._id));
         }
-        let resultObj = { userId: userId, events: eventsSet, loading: "finish", tab: 0 };
+        let resultObj = { userId: userId, events: eventsSet, loading : 'finish', tab: 0 };
         return resultObj;
     }
 
     checkingEventsbyMe = async () => {
         const userId = "bakyuns";
-        const checkingOtherResult = this.eventRoute + "/myPicks/" + userId;
+        const checkingOtherResult = this.eventRoute + "/myPicks/" + userId + '/' + this.state.fetchCnt;
         //const checkingOtherResult = this.eventRoute;
 
         let responseJson = await (await fetch(checkingOtherResult)).json();
@@ -82,7 +86,7 @@ export default class CheckResult extends React.Component<Props, State>{
         for (let event of responseJson) {
             eventsSet.push(await this.plotEvent(event._id));
         }
-        let resultObj = { userId: userId, events: eventsSet, loading: "finish", tab: 1 };
+        let resultObj = { userId: userId, events: eventsSet, loading : 'finish', tab: 1 };
         return resultObj;
     }
 
@@ -118,23 +122,99 @@ export default class CheckResult extends React.Component<Props, State>{
 
     fetchEvents = async () => {
         try {
-            console.log(this.state);
             if (this.state.tab === 0) {
                 let event = await this.checkingEventsOfMine();
-                this.setState(
-                    event
-                );
+                this.dataProcessing(event);
+                /*this.setState(
+                    event, () => this.dataProcessing()
+                );*/
+                //console.log(this.state);
             }
             else if (this.state.tab === 1) {
                 let event = await this.checkingEventsbyMe();
-                this.setState(
-                    event
-                );
-                console.log(this.state);
+                this.dataProcessing(event);
+                /*this.setState(
+                    event, () => this.dataProcessing()
+                );*/
+                //console.log(this.state);
             }
         } catch (err) {
             console.error(err);
         }
+    }
+
+    dataProcessing (resultEvent){
+        console.log("hahahahaa");
+        var sortedEvents = [];
+        for (let event of resultEvent.events) {
+            let oriStatus = event.result;
+            var sortStatusByCount = oriStatus.sort(function (a, b) {
+                return b.count - a.count;
+            });
+            sortedEvents.push({ eventId: event.eventId, title: event.title, status: event.status, result: sortStatusByCount });
+        }
+
+        var data_all = [];
+        //var showStructure = [];
+        sortedEvents.forEach((event, i) => {
+            var data = [];
+            var pasteData = [];
+            var imageHeight = 160;
+            var imageWidth = 160;
+
+            for (let j of event.result) {
+                var data_item = { id: j.photoId, uri: this.serverAddress + "/" + j.path };
+                data.push(data_item);
+
+                pasteData.push(
+                    <Image key={j.photoId}
+                        style={{ height: imageHeight, width: imageWidth }}
+                        source={data_item}
+                    />
+                )
+                imageHeight -= 40;
+                imageWidth -= 40;
+            }
+            data_all.push(data);
+
+            console.log("lenghth : " + this.showStructure.length);
+            this.showStructure.push(
+                <View key={this.index}>
+                    <View style={{ flexDirection: 'row' }}>
+                        <View style={{ flex: 1, alignItems: 'flex-start', paddingHorizontal: 15 }}>
+                            <RoundedButton
+                                title={event.status === 'voting' ? '투표중' : '만료'}
+                                styleButton={{
+                                    backgroundColor: event.status === 'voting' ? 'rgba(240, 10, 10, 0.6)' : 'gray',
+                                    width: 50, height: 25, padding: 5, marginBottom: 0
+                                }}
+                                styleText={{ color: 'white', fontSize: 12 }}
+                            />
+                        </View>
+                        <Text style={{ fontSize: 20 }}>{event.title} </Text>
+                        <View style={{ flex: 1, alignItems: 'flex-end', paddingHorizontal: 15 }}>
+                            <DetailButton onPress={() => this.handleEventDetail(i)} />
+                        </View>
+                    </View>
+                    <View style={{
+                        flexDirection: 'row',
+                        padding: 20, borderBottomWidth: 0.5, borderColor: '#444', borderTopWidth: 0.5
+                    }}>
+
+                        <View style={{ flex: 4, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'flex-start' }}>
+                            {pasteData}
+                        </View>
+
+
+                    </View>
+                </View>
+            )
+            this.index++;
+        });
+        this.setState(
+            resultEvent
+        )
+
     }
 
     async componentDidMount() {
@@ -146,18 +226,21 @@ export default class CheckResult extends React.Component<Props, State>{
     async changedTab() {
         console.log("ChangedTab Entrance");
         console.log("tab : " + this.state.tab);
+        this.showStructure = [];
         try {
             if (this.state.tab === 0) {
                 let event = await this.checkingEventsOfMine();
-                this.setState(
-                    event
-                );
+                this.dataProcessing(event);
+                /*this.setState(
+                    event, () => this.dataProcessing()
+                );*/
             }
             else if (this.state.tab === 1) {
                 let event = await this.checkingEventsbyMe();
-                this.setState(
-                    event
-                );
+                this.dataProcessing(event);
+                /*this.setState(
+                    event, () => this.dataProcessing()
+                );*/
                 console.log(this.state);
             }
         } catch (err) {
@@ -176,7 +259,20 @@ export default class CheckResult extends React.Component<Props, State>{
         //this.setState({})
     }
 
+    handleLoadMore = () =>{
+        this.setState({
+            fetchCnt : this.state.fetchCnt + 2
+        }, this.fetchEvents);
+    }
 
+    _renderItem = ({item}) => {
+        return (
+            <View>
+                {item}
+            </View>
+        )
+
+    }
     cnt = 0;
     render() {
         console.log("Check Result Render", this.cnt);
@@ -184,95 +280,15 @@ export default class CheckResult extends React.Component<Props, State>{
 
         if (this.state.loading === 'init') {
             console.log("Setstate Not Finished")
-            return <Text style={{ fontSize: 20 }}> Checking...</Text>
-        }
-
-        if (this.state.loading === 'finish') {
-            console.log("Setstate Finished");
-
-            var sortedEvents = [];
-            for (let event of this.state.events) {
-                let oriStatus = event.result;
-                var sortStatusByCount = oriStatus.sort(function (a, b) {
-                    return b.count - a.count;
-                });
-                sortedEvents.push({ eventId: event.eventId, title: event.title, status: event.status, result: sortStatusByCount });
-            }
-
-            var data_all = [];
-            var showStructure = [];
-            sortedEvents.forEach((event, i) => {
-                var data = [];
-                var pasteData = [];
-                var imageHeight = 160;
-                var imageWidth = 160;
-
-                for (let j of event.result) {
-                    var data_item = { id: j.photoId, uri: this.serverAddress + "/" + j.path };
-                    data.push(data_item);
-
-                    pasteData.push(
-                        <Image key={j.photoId}
-                            style={{ height: imageHeight, width: imageWidth }}
-                            source={data_item}
-                        />
-                    )
-                    imageHeight -= 40;
-                    imageWidth -= 40;
-                }
-                data_all.push(data);
-                showStructure.push(
-                    <View key={event.eventId}>
-                        <View style={{ flexDirection: 'row' }}>
-                            <View style={{ flex: 1, alignItems: 'flex-start', paddingHorizontal: 15 }}>
-                                <RoundedButton
-                                    title={event.status === 'voting' ? '투표중' : '만료'}
-                                    styleButton={{
-                                        backgroundColor: event.status === 'voting' ? 'rgba(240, 10, 10, 0.6)' : 'gray',
-                                        width: 50, height: 25, padding: 5, marginBottom: 0
-                                    }}
-                                    styleText={{ color: 'white', fontSize: 12 }}
-                                />
-                            </View>
-                            <Text style={{ fontSize: 20 }}>{event.title} </Text>
-                            <View style={{ flex: 1, alignItems: 'flex-end', paddingHorizontal: 15 }}>
-                                <DetailButton onPress={() => this.handleEventDetail(i)} />
-                            </View>
-                        </View>
-                        <View style={{
-                            flexDirection: 'row',
-                            padding: 20, borderBottomWidth: 0.5, borderColor: '#444', borderTopWidth: 0.5
-                        }}>
-
-                            <View style={{ flex: 4, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'flex-start' }}>
-                                {pasteData}
-                            </View>
-
-
-                        </View>
-                    </View>
-
-                    //</View>
-
-                )
-            });
-
-            console.log("---------------- tab : ", this.state.tab);
-            return (
-                <ScrollView>
-                    <View>
-                        <NavigationEvents
-                            onWillFocus={this.fetchEvents}
-                        // onDidFocus={payload => console.log('did focus')}
-                        // onWillBlur={payload => console.log('will blur')}
-                        // onDidBlur={payload => console.log('did blur')}
-                        />
+            return( //<Text style={{ fontSize: 20 }}> Checking...</Text>
+            <View>
+                        
                         <View style={{
                             alignItems: 'center', justifyContent: 'center',
                             padding: 20, borderBottomWidth: 0.5, borderColor: '#444', borderTopWidth: 0.5
                         }}>
                             <SwitchButton
-                                onValueChange={(val) => { this.setState({ tab: val }, this.changedTab) }}      // this is necessary for this component
+                                onValueChange={(val) => { this.setState({ tab: val, fetchCnt : 0 }, this.changedTab) }}      // this is necessary for this component
                                 text1='My Events'                        // optional: first text in switch button --- default ON
                                 text2='My Picks'                       // optional: second text in switch button --- default OFF
                                 switchWidth={250}                 // optional: switch width --- default 44
@@ -288,10 +304,56 @@ export default class CheckResult extends React.Component<Props, State>{
                                 activeFontColor='#fff'            // optional: active font color --- default #fff
                             />
                         </View>
-                        {showStructure}
-                        {this.eventSelectActionSheet}
+                        <Text style={{ fontSize: 20 }}> Checking...</Text>
+                        
                     </View>
-                </ScrollView>
+            )
+        }
+
+        if (this.state.loading === 'finish') {
+            console.log("Setstate Finished");
+
+            console.log("---------------- tab : ", this.state.tab);
+            console.log(this.showStructure.length);
+            return (
+                    <View>
+                        <NavigationEvents
+                            onWillFocus={this.fetchEvents}
+                        // onDidFocus={payload => console.log('did focus')}
+                        // onWillBlur={payload => console.log('will blur')}
+                        // onDidBlur={payload => console.log('did blur')}
+                        />
+                        <View style={{
+                            alignItems: 'center', justifyContent: 'center',
+                            padding: 20, borderBottomWidth: 0.5, borderColor: '#444', borderTopWidth: 0.5
+                        }}>
+                            <SwitchButton
+                                onValueChange={(val) => { this.setState({ tab: val, fetchCnt : 0 }, this.changedTab) }}      // this is necessary for this component
+                                text1='My Events'                        // optional: first text in switch button --- default ON
+                                text2='My Picks'                       // optional: second text in switch button --- default OFF
+                                switchWidth={250}                 // optional: switch width --- default 44
+                                switchHeight={44}                 // optional: switch height --- default 100
+                                switchdirection='ltr'             // optional: switch button direction ( ltr and rtl ) --- default ltr
+                                switchBorderRadius={100}          // optional: switch border radius --- default oval
+                                switchSpeedChange={500}           // optional: button change speed --- default 100
+                                switchBorderColor='#d4d4d4'       // optional: switch border color --- default #d4d4d4
+                                switchBackgroundColor='#fff'      // optional: switch background color --- default #fff
+                                btnBorderColor='#00a4b9'          // optional: button border color --- default #00a4b9
+                                btnBackgroundColor='#00bcd4'      // optional: button background color --- default #00bcd4
+                                fontColor='#b1b1b1'               // optional: text font color --- default #b1b1b1
+                                activeFontColor='#fff'            // optional: active font color --- default #fff
+                            />
+                        </View>
+                        {this.eventSelectActionSheet}
+                        <FlatList
+                        data = {this.showStructure}
+                        onEndReached={this.handleLoadMore}
+                        onEndReachedThreshold={0}
+                        renderItem={this._renderItem}
+                        keyExtractor={(item, index)=>index.toString()}
+                        />
+                    </View>
+                
 
             );
 
