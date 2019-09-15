@@ -204,6 +204,17 @@ exports.createVote = async (voter, eventId, photoId) => {
 
 /* Users */
 
+exports.findUser = (id) => {
+    return new Promise( (resolve, reject) => {
+        User.findOne({id}, (err, result) => {
+            if( result )
+                resolve( true );
+            else
+                resolve( false );
+        });
+    });
+}
+
 exports.getUser = (id, params) => {
     if( params.indexOf('password') != -1 )
         return Promise.reject('Don\'t ask password' );

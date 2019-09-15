@@ -57,17 +57,26 @@ exports.index = (req, res) => {
 
 exports.show = (req, res) => {
     console.log("controller.js - show");
-    // const id = parseInt(req.params.id, 10);
-    // if (!id) {
-    //     return res.status(400).json({error: 'Invalid id'});
-    // }
-    db.getUser(req.params.id, req.query.param.split(','))
-        .then((result)=> {
-            res.send(result);
-        }).catch((err) => {
-        console.error(err);
-        res.status(400).json({error: 'Invalid id'});
-    });
+    if ( req.query.hasOwnProperty('dupCheck') && req.query.dupCheck == 1 )
+    {
+        db.findUser(req.params.id)
+            .then((result) => {
+                res.json({resp:result});
+            }).catch((err) => {
+               console.error(err);
+               res.status(400).json({error: 'Bad Request'});
+        })
+    }
+    else {
+        /* TODO : Check Authorization for getting user information */
+        db.getUser(req.params.id, req.query.param.split(','))
+            .then((result) => {
+                res.send(result);
+            }).catch((err) => {
+            console.error(err);
+            res.status(400).json({error: 'Invalid id'});
+        });
+    }
 };
 
 exports.create = (req, res) => {

@@ -8,11 +8,13 @@ import { NavigationActions } from 'react-navigation'
 import { any } from 'prop-types';
 import config from '../../Component/config';
 import Sha256 from '../../Component/Sha256'
+import { AppLoading } from 'expo';
 
 interface State {
   errors?: any;
   emailRef?: any;
   secureTextEntry?: any;
+  dupCheck: Boolean;
   [x: string]: any;
 }
 interface Props {
@@ -23,9 +25,12 @@ interface Props {
 export default class SignUp extends React.Component<Props, State> {
   emailRef: any;
   passwordRef: any;
+  passwordVerifyRef: any;
+  nicknameRef: any;
   password: any;
   serverAddress = config.getConfig('serverAddress');
   createUserRoute = this.serverAddress + "/users";
+  dupCheckRoute = this.serverAddress + "/users";
 
   updateRef(name, ref) {
     this[name] = ref;
@@ -52,6 +57,34 @@ export default class SignUp extends React.Component<Props, State> {
   onSubmitPassword() {
     this.password.blur();
   }
+  dupCheck = async() => {
+    console.log("dupCheck");
+    console.log(this.dupCheckRoute+'/'+this.state['email']+'?dupCheck=1');
+    var response = await fetch(this.dupCheckRoute+'/'+this.state['email']+'?dupCheck=1', { 
+      method: 'get',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    const result = await response.json(); 
+    if ( result['resp'] != undefined  ) {
+      this.setState({dupCheck:!result['resp']});
+
+      if( result['resp'] )
+        alert('중복된 아이디입니다.'); 
+      else
+        alert('사용 가능한 아이디입니다.'); 
+    } 
+  }
+
+  renderEmailAccessory() {
+    console.log('renderEmailaccessory');
+    return (
+      <RaisedTextButton onPress={this.dupCheck} title='중복체크' color={TextField.defaultProps.tintColor} titleColor='white' />
+    );
+  }
+
   renderPasswordAccessory() {
     let { secureTextEntry } = this.state;
 
@@ -71,7 +104,7 @@ export default class SignUp extends React.Component<Props, State> {
   }
 
   onChangeText(text) {
-    ['email', 'password']
+    ['email', 'password', 'password_verify', 'nickname']
       .map((name) => ({ name, ref: this[name] }))
       .forEach(({ name, ref }) => {
         if (ref.isFocused()) {
@@ -110,15 +143,21 @@ export default class SignUp extends React.Component<Props, State> {
   onSubmit() {
     let errors = {};
 
-    ['email', 'password']
+    ['email', 'password', 'password_verify', 'nickname']
       .forEach((name) => {
         let value = this[name].value();
 
-        if (!value) {
-          errors[name] = 'Should not be empty';
+        if ( name == 'email' && !this.state.dupCheck){
+          errors[name] = '아이디 중복체크 해주세요.'; 
+        } else if (!value) {
+          errors[name] = '필수로 채워주셔야 합니다.';
         } else {
           if ('password' === name && value.length < 6) {
-            errors[name] = 'Too short';
+            errors[name] = '패스워드가 너무 짧습니다.';
+          }
+          else if( 'password_verify' === name && this['password'] != value )
+          {
+            errors[name] = '패스워드가 서로 다릅니다.';
           }
         }
       });
@@ -134,19 +173,21 @@ export default class SignUp extends React.Component<Props, State> {
     super(props);
     this.onFocus = this.onFocus.bind(this);
     this.emailRef = this.updateRef.bind(this, 'email');
+    this.nicknameRef= this.updateRef.bind(this, 'nickname');
     this.onSubmitEmail = this.onSubmitEmail.bind(this);
     this.onSubmitPassword = this.onSubmitPassword.bind(this);
     this.passwordRef = this.updateRef.bind(this, 'password');
+    this.passwordVerifyRef = this.updateRef.bind(this, 'password_verify');
     this.renderPasswordAccessory = this.renderPasswordAccessory.bind(this);
+    this.renderEmailAccessory = this.renderEmailAccessory.bind(this);
     this.onAccessoryPress = this.onAccessoryPress.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
+    //this.dupCheck = this.dupCheck.bind(this);
     this.onChangeText = this.onChangeText.bind(this);
 
     this.state = {
-      firstname: 'Eddard',
-      lastname: 'Stark',
-      about: 'Stoic, dutiful, and honorable man, considered to embody the values of the North',
       secureTextEntry: true,
+      dupCheck : false
     };
   }
   static navigationOptions = {
@@ -157,20 +198,28 @@ export default class SignUp extends React.Component<Props, State> {
     return (
       <View style={styles.container}>
         <StatusBar barStyle="default" />
-        <TextField
-          ref={this.emailRef}
-          value={data.email}
-          keyboardType='email-address'
-          autoCapitalize='none'
-          autoCorrect={false}
-          enablesReturnKeyAutomatically={true}
-          onChangeText={this.onChangeText}
-          onFocus={this.onFocus}
-          returnKeyType='next'
-          label='Email Address'
-          error={errors.email}
-        />
 
+            <TextField
+              ref={this.emailRef}
+              value={data.email}
+              keyboardType='email-address'
+              autoCapitalize='none'
+              autoCorrect={false}
+              enablesReturnKeyAutomatically={true}
+              onChangeText={this.onChangeText}
+              onFocus={this.onFocus}
+              returnKeyType='next'
+              label='Email 주소'
+              error={errors.email}
+              renderAccessory={this.renderEmailAccessory}
+            />
+        <View
+          style={{
+            borderBottomColor: 'gray',
+            borderBottomWidth: 1,
+            marginTop: 100,
+          }}
+         /> 
         <TextField
           ref={this.passwordRef}
           value={data.password}
@@ -183,13 +232,54 @@ export default class SignUp extends React.Component<Props, State> {
           onSubmitEditing={this.onSubmitPassword}
           onChangeText={this.onChangeText}
           returnKeyType='done'
-          label='Password'
+          label='암호'
           error={errors.password}
-          title='Choose wisely'
+          title='6글자 이상을 입력해주세요.'
           maxLength={30}
           characterRestriction={20}
           renderAccessory={this.renderPasswordAccessory}
         />
+        
+        <TextField
+          ref={this.passwordVerifyRef}
+          value={data.password_verify}
+          secureTextEntry={secureTextEntry}
+          autoCapitalize='none'
+          autoCorrect={false}
+          enablesReturnKeyAutomatically={true}
+          clearTextOnFocus={true}
+          onFocus={this.onFocus}
+          onSubmitEditing={this.onSubmitPassword}
+          onChangeText={this.onChangeText}
+          returnKeyType='done'
+          label='암호 재확인'
+          error={errors.password_verify}
+          title=''
+          maxLength={30}
+          characterRestriction={20}
+          renderAccessory={this.renderPasswordAccessory}
+        />
+      
+        <View
+          style={{
+            borderBottomColor: 'gray',
+            borderBottomWidth: 1,
+            marginTop: 100,
+          }}
+        />
+        <TextField
+          ref={this.nicknameRef}
+          value={data.nickname}
+          autoCapitalize='none'
+          autoCorrect={false}
+          enablesReturnKeyAutomatically={true}
+          onChangeText={this.onChangeText}
+          onFocus={this.onFocus}
+          returnKeyType='next'
+          label='닉네임'
+          error={errors.nickname}
+        />
+
         <RaisedTextButton onPress={this.onSubmit} title='submit' color={TextField.defaultProps.tintColor} titleColor='white' />
       </View>
     );
@@ -203,4 +293,10 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#ffffff',
   },
+  email: {
+    flex:1
+  },
+  duplicateCheck: {
+    flex:1
+  }
 });
